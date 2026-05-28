@@ -37,16 +37,7 @@ h1, h2, h3, h4, h5, h6 {
   --warning: #D97706;
 }
 
-// ─── Angular Material overrides ──────────────────────────────────────────────
-.mat-mdc-card {
-  border-radius: var(--radiusMd) !important;
-  box-shadow: var(--shadowMd) !important;
-  border: 1px solid var(--border) !important;
-  background: var(--bg) !important;
-  color: var(--text) !important;
-  transition: background-color 150ms ease, border-color 150ms ease !important;
-}
-
+// ─── Angular Material — Form fields ──────────────────────────────────────────
 .mat-primary {
   --mdc-filled-button-container-color: #E11D2E;
 }
@@ -56,7 +47,6 @@ h1, h2, h3, h4, h5, h6 {
   color: white !important;
 }
 
-// Form fields
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
@@ -82,15 +72,33 @@ h1, h2, h3, h4, h5, h6 {
 .mat-mdc-form-field-input-control,
 .mat-mdc-input-element {
   color: var(--text) !important;
+  caret-color: var(--red) !important;
 }
 
-.mat-mdc-floating-label {
+// Placeholder text — light mode
+input::placeholder,
+textarea::placeholder {
+  color: var(--textLight) !important;
+  opacity: 1 !important;
+}
+
+// Labels + icons
+.mat-mdc-floating-label,
+.mdc-floating-label {
   color: var(--textMuted) !important;
+  transition: color 150ms ease !important;
 }
 
 .mat-mdc-select-value-text,
 .mat-mdc-select-arrow {
   color: var(--text) !important;
+}
+
+// Prefix/suffix icons inside form fields
+.mat-mdc-form-field-icon-prefix mat-icon,
+.mat-mdc-form-field-icon-suffix mat-icon,
+.mat-mdc-form-field .mat-icon {
+  color: var(--textMuted) !important;
 }
 
 .mat-mdc-option {
@@ -110,7 +118,113 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadowLg) !important;
 }
 
-// Table
+// ─── Dark mode — Material overrides ──────────────────────────────────────────
+[data-theme="dark"] {
+
+  // Form field backgrounds & outlines
+  .mat-mdc-text-field-wrapper {
+    background-color: var(--bgSoft) !important;
+  }
+
+  .mdc-notched-outline__leading,
+  .mdc-notched-outline__notch,
+  .mdc-notched-outline__trailing {
+    border-color: var(--borderMd) !important;
+  }
+
+  // Placeholder text — MUST be light in dark mode
+  input::placeholder,
+  textarea::placeholder {
+    color: #475569 !important;
+    opacity: 1 !important;
+  }
+
+  // Filled/active input text
+  .mat-mdc-form-field-input-control,
+  .mat-mdc-input-element,
+  input.mat-mdc-input-element {
+    color: var(--text) !important;
+  }
+
+  // Labels
+  .mat-mdc-floating-label,
+  .mdc-floating-label {
+    color: var(--textMuted) !important;
+  }
+
+  // Prefix/suffix icons
+  .mat-mdc-form-field-icon-prefix mat-icon,
+  .mat-mdc-form-field-icon-suffix mat-icon,
+  .mat-mdc-form-field .mat-icon,
+  .mdc-text-field__icon {
+    color: var(--textMuted) !important;
+  }
+
+  // Icon buttons inside fields (password toggle etc.)
+  .mat-mdc-icon-button mat-icon {
+    color: var(--textMuted) !important;
+  }
+
+  // Cards
+  .mat-mdc-card {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    border-color: var(--border) !important;
+  }
+
+  // Table rows
+  .mat-mdc-header-row {
+    background: var(--bgSoft) !important;
+  }
+
+  .mat-mdc-row:hover .mat-mdc-cell {
+    background: rgba(241, 245, 249, 0.04) !important;
+  }
+
+  // Dialog
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+  }
+
+  .mdc-dialog__title,
+  .mat-mdc-dialog-title {
+    color: var(--text) !important;
+  }
+
+  .mdc-dialog__content,
+  .mat-mdc-dialog-content {
+    color: var(--textMuted) !important;
+  }
+
+  // Select panel
+  .mat-mdc-select-value-text { color: var(--text) !important; }
+  .mat-mdc-select-arrow { color: var(--textMuted) !important; }
+
+  .mat-mdc-option {
+    background-color: var(--bg) !important;
+    color: var(--text) !important;
+    &:hover, &.mdc-list-item--selected { background-color: var(--bgSubtle) !important; }
+  }
+
+  .mat-mdc-autocomplete-panel,
+  .mat-mdc-select-panel {
+    background-color: var(--bg) !important;
+    border: 1px solid var(--border) !important;
+  }
+}
+
+// ─── Angular Material — Card ──────────────────────────────────────────────────
+.mat-mdc-card {
+  border-radius: var(--radiusMd) !important;
+  box-shadow: var(--shadowMd) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  transition: background-color 150ms ease, border-color 150ms ease !important;
+}
+
+// ─── Angular Material — Table ─────────────────────────────────────────────────
 .mat-mdc-table {
   background: transparent !important;
   box-shadow: none !important;
@@ -157,7 +271,7 @@ h1, h2, h3, h4, h5, h6 {
   border-bottom: none !important;
 }
 
-// Snackbar + Dialog
+// ─── Snackbar + Dialog ────────────────────────────────────────────────────────
 .mat-mdc-snack-bar-container {
   border-radius: var(--radiusSm) !important;
 }
@@ -178,24 +292,24 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--textMuted) !important;
 }
 
-// Icon button
+// ─── Icon button ──────────────────────────────────────────────────────────────
 .mat-mdc-icon-button {
   color: var(--textMuted) !important;
 }
 
-// Toolbar (landing page compat)
+// ─── Toolbar ──────────────────────────────────────────────────────────────────
 mat-toolbar {
   background-color: var(--red) !important;
   color: white !important;
 }
 
-// ─── Status chips (used by status-chip component via global classes) ──────────
+// ─── Status chips ─────────────────────────────────────────────────────────────
 .chip-pending  { background: var(--warningLight) !important; color: var(--warning) !important; }
 .chip-approved, .chip-ok { background: var(--successLight) !important; color: var(--success) !important; }
 .chip-rejected, .chip-critical { background: var(--dangerLight) !important; color: var(--danger) !important; }
 .chip-low { background: var(--warningLight) !important; color: var(--warning) !important; }
 
-// ─── Legacy layout helpers ───────────────────────────────────────────────────
+// ─── Layout helpers ───────────────────────────────────────────────────────────
 .container    { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
 .flex-row     { display: flex; flex-direction: row; gap: 16px; }
 .flex-col     { display: flex; flex-direction: column; gap: 16px; }
@@ -206,6 +320,7 @@ mat-toolbar {
 .text-muted   { color: var(--textMuted); }
 .grid-cols-4  { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
 .grid-cols-2  { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+
 .card {
   background: var(--bg);
   border-radius: var(--radiusMd);

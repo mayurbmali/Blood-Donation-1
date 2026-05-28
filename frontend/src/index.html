@@ -8,9 +8,295 @@
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Apply theme immediately to prevent flash -->
+  <script>
+    (function() {
+      var stored = localStorage.getItem('app-theme');
+      var theme = (stored === 'light' || stored === 'dark') ? stored
+        : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+
+  <style>
+    /* ── Loader theme tokens ──────────────────────────────────────────── */
+    #ll-loader {
+      --ld-bg:      #F8FAFC;
+      --ld-surface: #FFFFFF;
+      --ld-text:    #94A3B8;
+      --ld-sub:     #CBD5E1;
+      --ld-border:  rgba(15,23,42,0.08);
+      --ld-red:     #E11D2E;
+      --ld-red2:    #B3121F;
+    }
+    [data-theme="dark"] #ll-loader {
+      --ld-bg:      #0F172A;
+      --ld-surface: #1E293B;
+      --ld-text:    #94A3B8;
+      --ld-sub:     #475569;
+      --ld-border:  rgba(241,245,249,0.08);
+    }
+
+    /* ── Overlay ──────────────────────────────────────────────────────── */
+    #ll-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--ld-bg);
+      gap: 28px;
+      overflow: hidden;
+      transition: none;
+    }
+
+    #ll-loader.ll-loader--out {
+      animation: loaderFadeOut 0.4s cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+
+    @keyframes loaderFadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to   { opacity: 0; transform: scale(0.97); }
+    }
+
+    /* ── Drop wrapper ─────────────────────────────────────────────────── */
+    .ll-loader-drop {
+      position: relative;
+      width: 100px;
+      height: 128px;
+    }
+
+    .ll-loader-drop svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    /* ── Glow halo behind drop ────────────────────────────────────────── */
+    .ll-loader-glow {
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(225,29,46,0.18) 0%, transparent 70%);
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      filter: blur(16px);
+      animation: glowBreath 2s ease-in-out infinite;
+    }
+
+    @keyframes glowBreath {
+      0%,100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
+      50%      { opacity: 1;   transform: translateX(-50%) scale(1.2); }
+    }
+
+    /* ── Fill animation ───────────────────────────────────────────────── */
+    .drop-fill-rect {
+      animation: dropFill 1.3s cubic-bezier(0.25,0.46,0.45,0.94) 0.2s both;
+      transform-origin: bottom center;
+      transform-box: fill-box;
+    }
+
+    @keyframes dropFill {
+      from { transform: translateY(100%); }
+      to   { transform: translateY(0%); }
+    }
+
+    /* ── Shine sweep ──────────────────────────────────────────────────── */
+    .drop-shine-rect {
+      animation: shineSweep 1.1s cubic-bezier(0.4,0,0.2,1) 0.5s both;
+    }
+
+    @keyframes shineSweep {
+      from { transform: translateX(-80px) skewX(-12deg); }
+      to   { transform: translateX(160px) skewX(-12deg); }
+    }
+
+    /* ── Drop outline draw ────────────────────────────────────────────── */
+    .drop-outline-path {
+      stroke-dasharray: 420;
+      stroke-dashoffset: 420;
+      animation: drawOutline 0.8s ease 0s forwards;
+    }
+
+    @keyframes drawOutline {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ── ECG line ─────────────────────────────────────────────────────── */
+    .drop-ecg {
+      stroke-dasharray: 200;
+      stroke-dashoffset: 200;
+      animation: drawEcg 0.6s ease 0.9s forwards;
+    }
+
+    @keyframes drawEcg {
+      to { stroke-dashoffset: 0; }
+    }
+
+    /* ── Brand text ───────────────────────────────────────────────────── */
+    .ll-loader-brand {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      animation: fadeUp 0.5s ease 0.3s both;
+    }
+
+    .ll-loader-name {
+      font-family: 'Sora', 'Inter', system-ui, sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--ld-text);
+    }
+
+    .ll-loader-name span {
+      color: var(--ld-red);
+    }
+
+    .ll-loader-sub {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ld-sub);
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Progress bar ─────────────────────────────────────────────────── */
+    .ll-loader-bar {
+      width: 120px;
+      height: 3px;
+      background: var(--ld-border);
+      border-radius: 99px;
+      overflow: hidden;
+      animation: fadeUp 0.5s ease 0.4s both;
+    }
+
+    .ll-loader-bar__fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ld-red2), var(--ld-red));
+      border-radius: 99px;
+      animation: barFill 1.4s cubic-bezier(0.25,0.46,0.45,0.94) 0.3s both;
+      transform-origin: left center;
+    }
+
+    @keyframes barFill {
+      from { transform: scaleX(0); }
+      to   { transform: scaleX(1); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Reduced motion ───────────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .drop-fill-rect,
+      .drop-shine-rect,
+      .drop-outline-path,
+      .drop-ecg,
+      .ll-loader-brand,
+      .ll-loader-bar,
+      .ll-loader-glow { animation: none !important; }
+      .drop-outline-path { stroke-dashoffset: 0; }
+      .drop-fill-rect    { transform: translateY(0); }
+      .drop-ecg          { stroke-dashoffset: 0; }
+    }
+
+    /* ── Body lock ────────────────────────────────────────────────────── */
+    body.ll-loading {
+      overflow: hidden;
+    }
+  </style>
 </head>
-<body>
+<body class="ll-loading">
+
+  <!-- ═══════════════════════════════════════════════════
+       PREMIUM INITIAL LOADER — removed by AppComponent
+  ═══════════════════════════════════════════════════ -->
+  <div id="ll-loader" role="status" aria-label="Loading LifeLink">
+
+    <div class="ll-loader-glow"></div>
+
+    <div class="ll-loader-drop">
+      <svg viewBox="0 0 100 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Fill gradient -->
+          <linearGradient id="fillGrad" x1="50" y1="130" x2="50" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stop-color="#B3121F"/>
+            <stop offset="100%" stop-color="#F04060"/>
+          </linearGradient>
+
+          <!-- Shine gradient -->
+          <linearGradient id="shineGrad" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+            <stop offset="0%"   stop-color="white" stop-opacity="0"/>
+            <stop offset="50%"  stop-color="white" stop-opacity="0.28"/>
+            <stop offset="100%" stop-color="white" stop-opacity="0"/>
+          </linearGradient>
+
+          <!-- Drop shape clip path -->
+          <clipPath id="dropClip">
+            <path d="M50 5C50 5 6 55 6 82C6 107 26 126 50 126C74 126 94 107 94 82C94 55 50 5 50 5Z"/>
+          </clipPath>
+        </defs>
+
+        <!-- Drop outline (drawn in) -->
+        <path class="drop-outline-path"
+          d="M50 5C50 5 6 55 6 82C6 107 26 126 50 126C74 126 94 107 94 82C94 55 50 5 50 5Z"
+          fill="none"
+          stroke="rgba(225,29,46,0.22)"
+          stroke-width="2"
+          stroke-linecap="round"/>
+
+        <!-- Fill (translates up from bottom, clipped to drop) -->
+        <rect class="drop-fill-rect"
+          x="0" y="0" width="100" height="130"
+          fill="url(#fillGrad)"
+          clip-path="url(#dropClip)"/>
+
+        <!-- Inner highlight: small lighter teardrop -->
+        <path
+          d="M50 38C50 38 34 58 34 72C34 83 41 90 50 90C59 90 66 83 66 72C66 58 50 38 50 38Z"
+          fill="rgba(255,255,255,0.10)"
+          clip-path="url(#dropClip)"/>
+
+        <!-- Shine sweep layer -->
+        <rect class="drop-shine-rect"
+          x="-30" y="-10" width="50" height="150"
+          fill="url(#shineGrad)"
+          clip-path="url(#dropClip)"/>
+
+        <!-- ECG / heartbeat line clipped inside drop -->
+        <polyline class="drop-ecg"
+          points="14,80 28,80 35,62 42,96 48,52 55,102 62,80 86,80"
+          fill="none"
+          stroke="rgba(255,255,255,0.88)"
+          stroke-width="2.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          clip-path="url(#dropClip)"/>
+      </svg>
+    </div>
+
+    <div class="ll-loader-brand">
+      <div class="ll-loader-name">Life<span>Link</span></div>
+      <div class="ll-loader-sub">Preparing to save lives…</div>
+    </div>
+
+    <div class="ll-loader-bar">
+      <div class="ll-loader-bar__fill"></div>
+    </div>
+
+  </div>
+
   <app-root></app-root>
+
 </body>
 </html>
