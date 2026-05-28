@@ -8,18 +8,26 @@
         <path d="M16 2C16 2 2 18.5 2 27C2 34.3 8.3 40 16 40C23.7 40 30 34.3 30 27C30 18.5 16 2 16 2Z" fill="var(--red)"/>
         <path d="M16 14C16 14 8 23.5 8 28C8 32 11.6 35 16 35C20.4 35 24 32 24 28C24 23.5 16 14 16 14Z" fill="rgba(255,255,255,0.25)"/>
       </svg>
-      <span>LifeLink</span>
+      <div class="ll-nav__logo-text">
+        <span class="ll-nav__logo-name">LifeLink</span>
+        <span class="ll-nav__logo-sub">Blood Donation System</span>
+      </div>
     </a>
 
     <ul class="ll-nav__links" [class.open]="mobileMenuOpen">
-      <li *ngFor="let link of navLinks">
-        <a (click)="scrollTo(link)">{{ link }}</a>
-      </li>
+      <li><a class="ll-nav__link--active" (click)="scrollTo('Home')">Home</a></li>
+      <li><a>About</a></li>
+      <li><a (click)="scrollTo('Features')">Features</a></li>
+      <li><a>Donors</a></li>
+      <li><a>Hospitals</a></li>
+      <li><a>Reports</a></li>
+      <li><a (click)="scrollTo('Contact')">Contact</a></li>
     </ul>
 
     <div class="ll-nav__right">
       <a routerLink="/login" class="ll-btn ll-btn--ghost">Sign In</a>
-      <a routerLink="/register" class="ll-btn ll-btn--primary">Get Started</a>
+      <a routerLink="/register" class="ll-btn ll-btn--primary">Get Started &nbsp;→</a>
+      <button class="ll-nav__menu-icon" (click)="mobileMenuOpen = !mobileMenuOpen">&#9776;</button>
     </div>
 
     <button class="ll-nav__burger" (click)="mobileMenuOpen = !mobileMenuOpen" [class.active]="mobileMenuOpen">
@@ -32,81 +40,121 @@
      HERO
 ============================================================ -->
 <section class="ll-hero" id="hero">
-  <div class="ll-hero__bg">
-    <div class="ll-hero__wave ll-hero__wave--1"></div>
-    <div class="ll-hero__wave ll-hero__wave--2"></div>
-    <div class="ll-hero__wave ll-hero__wave--3"></div>
-  </div>
 
   <div class="ll-hero__content">
+    <!-- LEFT — text -->
     <div class="ll-hero__text">
       <div class="ll-badge">
-        <span class="ll-badge__dot"></span>
+        <span class="ll-badge__heart">♥</span>
         Every Drop Counts
       </div>
+
       <h1 class="ll-hero__headline">
-        Donate Blood.<br><span class="ll-hero__headline--red">Save Lives.</span>
+        Donate Blood.<br>
+        <span class="ll-hero__headline--red">Save Lives.</span>
       </h1>
+
       <p class="ll-hero__sub">
         LifeLink is a smart Blood Donation Management System that connects donors, hospitals, and organizations to save lives efficiently and effortlessly.
       </p>
+
       <div class="ll-hero__ctas">
         <a routerLink="/register" class="ll-btn ll-btn--primary ll-btn--lg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0z"/></svg>
-          I Want to Donate
+          I Want to Donate &nbsp;→
         </a>
-        <a routerLink="/register" class="ll-btn ll-btn--outline ll-btn--lg">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 6v4l3 3"/></svg>
+        <a routerLink="/register" class="ll-btn ll-btn--outline-red ll-btn--lg">
           Request Blood
+          <svg viewBox="0 0 24 24" fill="var(--red)" stroke="none" width="18" height="18"><path d="M12 2C12 2 4 10.5 4 15C4 19.4 7.6 23 12 23C16.4 23 20 19.4 20 15C20 10.5 12 2 12 2Z"/></svg>
         </a>
+      </div>
+
+      <!-- Social Proof -->
+      <div class="ll-social-proof">
+        <div class="ll-avatars">
+          <div class="ll-avatar ll-avatar--1">👤</div>
+          <div class="ll-avatar ll-avatar--2">👤</div>
+          <div class="ll-avatar ll-avatar--3">👤</div>
+          <div class="ll-avatar ll-avatar--plus">+</div>
+        </div>
+        <div class="ll-social-proof__text">
+          <strong>Join <span class="ll-red">25,000+</span> heroes</strong>
+          <span>who are saving lives</span>
+        </div>
       </div>
     </div>
 
+    <!-- RIGHT — visual -->
     <div class="ll-hero__visual">
-      <div class="ll-orbit">
-        <div class="ll-orbit__ring ll-orbit__ring--1">
-          <div class="ll-orbit__icon" title="Donors">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-            <span>Donors</span>
-          </div>
+
+      <!-- Decorative dashed rings -->
+      <div class="ll-deco-ring ll-deco-ring--1"></div>
+      <div class="ll-deco-ring ll-deco-ring--2"></div>
+
+      <!-- Floating feature cards -->
+      <div class="ll-float-card" style="top:4%;left:50%;transform:translateX(-50%)">
+        <div class="ll-float-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         </div>
-        <div class="ll-orbit__ring ll-orbit__ring--2">
-          <div class="ll-orbit__icon" title="Hospitals">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
-            <span>Hospitals</span>
-          </div>
-        </div>
-        <div class="ll-orbit__ring ll-orbit__ring--3">
-          <div class="ll-orbit__icon" title="Reports">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/></svg>
-            <span>Reports</span>
-          </div>
-        </div>
-        <div class="ll-orbit__ring ll-orbit__ring--4">
-          <div class="ll-orbit__icon" title="Alerts">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            <span>Alerts</span>
-          </div>
-        </div>
+        Donors
       </div>
 
-      <!-- Central blood drop -->
+      <div class="ll-float-card" style="top:36%;left:-2%">
+        <div class="ll-float-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M12 2C12 2 4 10.5 4 15C4 19.4 7.6 23 12 23C16.4 23 20 19.4 20 15C20 10.5 12 2 12 2Z"/></svg>
+        </div>
+        Blood Banks
+      </div>
+
+      <div class="ll-float-card" style="bottom:22%;left:4%">
+        <div class="ll-float-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        Notifications
+      </div>
+
+      <div class="ll-float-card" style="top:10%;right:-1%">
+        <div class="ll-float-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+        </div>
+        Hospitals
+      </div>
+
+      <div class="ll-float-card" style="bottom:26%;right:0%">
+        <div class="ll-float-card__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/></svg>
+        </div>
+        Reports
+      </div>
+
+      <!-- Central blood drop with ECG line -->
       <div class="ll-hero__drop">
-        <svg viewBox="0 0 160 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 160 220" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <linearGradient id="dropGrad" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stop-color="#FF4D5E"/>
-              <stop offset="100%" stop-color="#B3121F"/>
+            <linearGradient id="dropGrad2" x1="0" y1="0" x2="0.5" y2="1">
+              <stop offset="0%" stop-color="#F04060"/>
+              <stop offset="100%" stop-color="#CC0A1A"/>
             </linearGradient>
-            <filter id="dropGlow">
-              <feGaussianBlur stdDeviation="6" result="blur"/>
-              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-            </filter>
+            <clipPath id="dropClip">
+              <path d="M80 8C80 8 10 90 10 138C10 174 41.3 200 80 200C118.7 200 150 174 150 138C150 90 80 8 80 8Z"/>
+            </clipPath>
           </defs>
-          <path d="M80 8C80 8 10 90 10 135C10 171 41.3 196 80 196C118.7 196 150 171 150 135C150 90 80 8 80 8Z" fill="url(#dropGrad)" filter="url(#dropGlow)"/>
-          <path d="M80 55C80 55 42 102 42 130C42 150 59 165 80 165C101 165 118 150 118 130C118 102 80 55 80 55Z" fill="rgba(255,255,255,0.18)"/>
-          <text x="80" y="138" text-anchor="middle" fill="white" font-size="28" font-weight="700" font-family="sans-serif">A+</text>
+          <!-- Drop shape -->
+          <path d="M80 8C80 8 10 90 10 138C10 174 41.3 200 80 200C118.7 200 150 174 150 138C150 90 80 8 80 8Z" fill="url(#dropGrad2)"/>
+          <!-- Inner highlight -->
+          <path d="M80 55C80 55 42 102 42 133C42 153 59 168 80 168C101 168 118 153 118 133C118 102 80 55 80 55Z" fill="rgba(255,255,255,0.12)"/>
+          <!-- ECG / heartbeat line clipped to drop -->
+          <g clip-path="url(#dropClip)">
+            <polyline points="18,128 44,128 54,104 64,150 74,86 84,158 94,128 142,128" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.92"/>
+          </g>
         </svg>
+
+        <!-- Shield badge -->
+        <div class="ll-hero__shield">
+          <svg viewBox="0 0 48 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 2L4 11v14c0 11.5 8.5 22.2 20 24.9C35.5 47.2 44 36.5 44 25V11L24 2z" fill="#E11D2E"/>
+            <path d="M17 27h14M24 20v14" stroke="white" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
         <div class="ll-hero__drop-glow"></div>
       </div>
     </div>
@@ -118,14 +166,51 @@
 </section>
 
 <!-- ============================================================
-     STATS STRIP
+     STATS STRIP — white floating card
 ============================================================ -->
 <section class="ll-stats" id="stats">
   <div class="ll-stats__inner">
-    <div class="ll-stat-card" *ngFor="let s of stats" appReveal>
-      <div class="ll-stat-card__num">{{ s.current | number }}{{ s.suffix }}</div>
-      <div class="ll-stat-card__label">{{ s.label }}</div>
+
+    <div class="ll-stat-card">
+      <div class="ll-stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 2C12 2 4 10.5 4 15C4 19.4 7.6 23 12 23C16.4 23 20 19.4 20 15C20 10.5 12 2 12 2Z" stroke="var(--red)" fill="none"/></svg>
+      </div>
+      <div>
+        <div class="ll-stat-card__num">25,000+</div>
+        <div class="ll-stat-card__label">Donors Registered</div>
+      </div>
     </div>
+
+    <div class="ll-stat-card">
+      <div class="ll-stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M6 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2h-2M9 12h6M12 9v6"/></svg>
+      </div>
+      <div>
+        <div class="ll-stat-card__num">18,500+</div>
+        <div class="ll-stat-card__label">Units Donated</div>
+      </div>
+    </div>
+
+    <div class="ll-stat-card">
+      <div class="ll-stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M4.318 6.318a4.5 4.5 0 0 0 0 6.364L12 20.364l7.682-7.682a4.5 4.5 0 0 0-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 0 0-6.364 0z"/></svg>
+      </div>
+      <div>
+        <div class="ll-stat-card__num">12,000+</div>
+        <div class="ll-stat-card__label">Lives Saved</div>
+      </div>
+    </div>
+
+    <div class="ll-stat-card">
+      <div class="ll-stat-card__icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M12 8v8M8 12h8"/></svg>
+      </div>
+      <div>
+        <div class="ll-stat-card__num">850+</div>
+        <div class="ll-stat-card__label">Hospitals Connected</div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -135,23 +220,18 @@
 <section class="ll-section ll-features" id="features">
   <div class="ll-container">
     <div class="ll-section__head" appReveal>
-      <div class="ll-eyebrow">Why LifeLink</div>
-      <h2 class="ll-section__title">Everything you need to manage blood donations</h2>
+      <p class="ll-eyebrow-plain">SMART. SIMPLE. IMPACTFUL.</p>
+      <h2 class="ll-section__title">Everything You Need to <span style="color:var(--red)">Save Lives</span></h2>
       <p class="ll-section__sub">One unified platform purpose-built for blood banks, hospitals, and donors.</p>
     </div>
 
     <div class="ll-features__grid">
       <div class="ll-feature-card" *ngFor="let f of features; let i = index" appReveal [revealDelay]="i * 100">
         <div class="ll-feature-card__icon">
-          <!-- Donor icon -->
           <svg *ngIf="f.icon==='donor'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          <!-- Blood icon -->
-          <svg *ngIf="f.icon==='blood'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C12 2 4 10.5 4 15C4 19.4 7.6 23 12 23C16.4 23 20 19.4 20 15C20 10.5 12 2 12 2Z"/><path d="M12 11L9 15H15L12 11Z" fill="currentColor" stroke="none"/></svg>
-          <!-- Request icon -->
+          <svg *ngIf="f.icon==='blood'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2C12 2 4 10.5 4 15C4 19.4 7.6 23 12 23C16.4 23 20 19.4 20 15C20 10.5 12 2 12 2Z"/></svg>
           <svg *ngIf="f.icon==='request'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12h6M12 9v6M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
-          <!-- Alert icon -->
           <svg *ngIf="f.icon==='alert'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-          <!-- Chart icon -->
           <svg *ngIf="f.icon==='chart'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/></svg>
         </div>
         <h3 class="ll-feature-card__title">{{ f.title }}</h3>

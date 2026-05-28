@@ -1,0 +1,477 @@
+# Replit Prompt: Redesign Landing Page to Match Reference Design
+
+## Goal
+
+Redesign the LifeLink landing page (`landing-page.component.html` + `landing-page.component.scss`) to closely match the attached reference image. The reference shows a premium, clean, white-background design with specific layout, visual, and color treatment differences from the current implementation.
+
+Do **NOT** touch any other files. The TypeScript (`landing-page.component.ts`) stays unchanged.
+
+---
+
+## Reference Design — What Must Change
+
+Study the reference image carefully. Here is a precise breakdown of every visual difference:
+
+---
+
+### 1. NAVBAR
+
+**Current:** Logo text and nav links are plain. "Get Started" button is pill-shaped red.
+
+**Target:**
+- Logo: blood-drop SVG icon (red) + bold **"LifeLink"** in dark text + subtitle **"Blood Donation System"** in small gray text stacked below the name
+- Nav links: **Home, About, Features, Donors, Hospitals, Reports, Contact** — update the `navLinks` array in the HTML `*ngFor` or hardcode them
+- Active link ("Home") has a red underline accent
+- **"Get Started →"** button: red background, pill-shaped, with a right-arrow `→`
+- Add a hamburger/menu icon (≡) on the far right alongside the "Get Started" button (keep existing burger for mobile)
+- Navbar background: pure white, clean, no shadow until scrolled
+
+---
+
+### 2. HERO SECTION — LAYOUT & BACKGROUND
+
+**Current:** Dark-ish gradient with subtle red waves. 50/50 grid. Stats below are on a dark navy background.
+
+**Target:**
+- Background: **pure white `#FFFFFF`** with a very subtle **light pink blush** (`#FFF0F0` or `rgba(255,230,230,0.3)`) cloud/blob shape on the right half only (behind the visual). No dark areas.
+- The left side (text) stays on white. The right side has the blush background shape.
+- Add **flowing red wave/ribbon shapes** at the bottom of the hero — two overlapping curved shapes in red (`#E11D2E`) and a lighter pink, like ribbons curving from left to right at the bottom edge. These give the section a premium swoosh feel.
+- Layout remains 2-column grid (text left, visual right).
+
+---
+
+### 3. HERO — LEFT TEXT COLUMN
+
+**Current:** Badge pill → Headline → Subtitle → Two CTA buttons → no social proof avatars
+
+**Target (match reference exactly):**
+
+```
+[♥ Every Drop Counts]       ← pink pill badge with heart icon
+
+Donate Blood.               ← large black bold
+Save Lives.                 ← large RED bold (same line weight, different color)
+
+LifeLink is a smart Blood Donation Management System that
+connects donors, hospitals, and organizations to save lives
+efficiently and effortlessly.
+
+[I Want to Donate →]   [Request Blood 🩸]   ← two buttons side by side
+
+[avatar1][avatar2][avatar3][+]  Join 25,000+ heroes
+                                who are saving lives
+```
+
+**Button styles:**
+- "I Want to Donate →" — solid red, pill, with right arrow
+- "Request Blood 🩸" — white background, red border, pill, blood drop icon on right
+
+**Social proof row:**
+- Three small circular avatar photos (use placeholder colored circles with initials: one female silhouette, one male, one female — use small circular `<div>` elements styled as avatars in different skin tones)
+- A `+` circle in red/pink
+- Text: **"Join 25,000+ heroes"** (bold, dark) **"who are saving lives"** (muted gray) — stacked on two lines
+
+---
+
+### 4. HERO — RIGHT VISUAL COLUMN (Critical change)
+
+**Current:** Orbit rings with floating icon cards, central blood drop SVG with "A+" text.
+
+**Target (match reference exactly):**
+
+Replace the current orbit system with this layout:
+
+**Central element — 3D-style blood drop:**
+- Large blood drop shape, deep red gradient (`#CC0A1A` to `#E8354A`), with a **white ECG/heartbeat line** drawn across the middle of it
+- Below the drop, a red **medical cross shield** badge (circle with + symbol)
+- The drop should have a subtle shadow/glow: `drop-shadow(0 30px 60px rgba(200,10,30,0.4))`
+- Drop size: ~260px wide, ~320px tall
+
+**Floating orbit icon cards** (positioned absolutely around the drop, NOT on rings — static positions):
+- **Top center:** "Donors" card — red circle icon (people/users SVG) + label
+- **Left middle:** "Blood Banks" card — red circle icon (blood drop SVG) + label  
+- **Bottom left:** "Notifications" card — red circle icon (bell SVG) + label
+- **Right top:** "Hospitals" card — red circle icon (hospital/building SVG) + label
+- **Right bottom:** "Reports" card — red circle icon (chart/report SVG) + label
+
+**Card style for each floating icon:**
+```css
+background: white;
+border-radius: 14px;
+padding: 10px 16px;
+box-shadow: 0 8px 30px rgba(0,0,0,0.10);
+display: flex;
+flex-direction: column;
+align-items: center;
+gap: 6px;
+font-size: 12px;
+font-weight: 600;
+color: #1a1a2e;
+
+.icon-circle {
+  width: 44px; height: 44px;
+  background: #E11D2E;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  svg { stroke: white; width: 20px; height: 20px; }
+}
+```
+
+**Approximate absolute positions** (relative to the visual container, which is ~560px × 520px):
+- Donors: `top: 5%; left: 50%; transform: translateX(-50%)`
+- Blood Banks: `top: 38%; left: 2%`
+- Notifications: `bottom: 22%; left: 8%`
+- Hospitals: `top: 15%; right: 2%`
+- Reports: `bottom: 28%; right: 2%`
+
+Remove the orbit ring `<div>` elements and the `ll-orbit` CSS entirely and replace with this static floating card approach.
+
+**Dashed connection lines:** Add very subtle dashed circle outlines in the background of the visual (light gray, `rgba(225,29,46,0.08)`, `border: 1px dashed`) as decorative circles at ~300px, ~420px diameter, centered on the drop.
+
+---
+
+### 5. STATS STRIP
+
+**Current:** Dark navy background strip with white text numbers.
+
+**Target:** 
+- **White background** with a subtle card container
+- Container: `background: white; border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,0.08); border: 1px solid #f0f0f0`
+- The stats float as a white card that overlaps the bottom of the hero section (negative margin-top: `-50px`, `position: relative; z-index: 10`)
+- Each stat: small red icon circle on the left + number + label stacked
+- Layout: 4 stats in a row with vertical dividers (`border-right: 1px solid #f0f0f0`)
+
+**Exact stat values to use (from reference):**
+- 🩸 **25,000+** Donors Registered
+- 🩸 **18,500+** Units Donated
+- ❤️ **12,000+** Lives Saved
+- 🏥 **850+** Hospitals Connected
+
+Update these numbers in the TypeScript `stats` array too (change the `end` values accordingly).
+
+**Icon for each stat (small red circle, 40px, in the card):**
+- Donors: blood drop icon
+- Units: clipboard/vial icon
+- Lives: heart icon
+- Hospitals: building/hospital icon
+
+---
+
+### 6. FEATURES SECTION
+
+**Current:** `eyebrow: "Why LifeLink"` on dark background pill badge.
+
+**Target:**
+- Eyebrow text: **"SMART. SIMPLE. IMPACTFUL."** in red, letter-spaced uppercase, no pill/background — plain red text
+- Section title: **"Everything You Need to"** in black bold + **"Save Lives"** in red
+- Feature cards: white background, subtle border, red icon circles (same as the floating hero cards), clean card layout
+- Match the 6 features shown in reference: Donor Management, Blood Availability, Request Blood, Real-time Alerts, Reports & Analytics (keep existing content, just restyle)
+
+---
+
+### 7. HERO BADGE (small detail)
+
+The `[♥ Every Drop Counts]` badge:
+- Heart icon (filled red `♥`) on the left
+- Pink background `#FFF0F3`
+- Red border `rgba(225,29,46,0.25)`
+- Text: red, 13px, semi-bold
+
+---
+
+## Complete SCSS Changes
+
+Apply these specific CSS changes in `landing-page.component.scss`:
+
+### Hero background
+```scss
+.ll-hero {
+  background: #FFFFFF;
+  
+  // Right-side blush blob
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 55%;
+    height: 100%;
+    background: radial-gradient(ellipse at 70% 40%, rgba(255,220,225,0.45) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+  
+  // Bottom wave ribbons
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: 
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120'%3E%3Cpath fill='%23E11D2E' fill-opacity='1' d='M0,80 C360,20 720,120 1080,60 C1260,30 1350,50 1440,40 L1440,120 L0,120 Z'/%3E%3C/svg%3E") no-repeat bottom;
+    background-size: cover;
+    z-index: 0;
+    pointer-events: none;
+  }
+}
+```
+
+### Stats card (white, floating)
+```scss
+.ll-stats {
+  background: transparent;
+  padding: 0 0 60px;
+  position: relative;
+  z-index: 10;
+  
+  &__inner {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.09);
+    border: 1px solid rgba(0,0,0,0.06);
+    margin-top: -50px;
+    background-clip: padding-box;
+  }
+}
+
+.ll-stat-card {
+  background: white;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 28px;
+  border-right: 1px solid #f0f0f0;
+  text-align: left;
+  
+  &:last-child { border-right: none; }
+  
+  &__icon {
+    width: 48px; height: 48px;
+    background: rgba(225,29,46,0.08);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    svg { width: 22px; height: 22px; stroke: var(--red); }
+  }
+  
+  &__num {
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--dark);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  
+  &__label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+}
+```
+
+### Floating icon cards (replaces orbit)
+```scss
+.ll-float-card {
+  position: absolute;
+  background: white;
+  border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0F172A;
+  z-index: 3;
+  white-space: nowrap;
+  animation: floatY 3s ease-in-out infinite;
+  
+  &__icon {
+    width: 44px; height: 44px;
+    background: #E11D2E;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    svg { stroke: white; width: 20px; height: 20px; fill: none; }
+  }
+  
+  // Stagger float animations
+  &:nth-child(2) { animation-delay: 0.5s; }
+  &:nth-child(3) { animation-delay: 1s; }
+  &:nth-child(4) { animation-delay: 1.5s; }
+  &:nth-child(5) { animation-delay: 2s; }
+}
+
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+```
+
+### Drop with ECG line
+The central blood drop SVG must include:
+- Gradient fill from `#CC0A1A` → `#F04060`
+- An ECG/heartbeat `<path>` overlaid in white: `M30,100 L50,100 L60,70 L70,130 L80,60 L90,140 L100,100 L130,100` (adjust to fit drop dimensions)
+- A shield/cross badge below the drop tip
+
+---
+
+## HTML Structure Changes
+
+### Replace orbit section in hero visual
+
+Remove:
+```html
+<div class="ll-orbit">
+  <!-- all 4 orbit rings and their icon divs -->
+</div>
+```
+
+Replace with:
+```html
+<!-- Decorative dashed rings -->
+<div class="ll-deco-ring ll-deco-ring--1"></div>
+<div class="ll-deco-ring ll-deco-ring--2"></div>
+
+<!-- Floating feature cards -->
+<div class="ll-float-card" style="top:5%; left:50%; transform:translateX(-50%)">
+  <div class="ll-float-card__icon">
+    <!-- users SVG -->
+  </div>
+  Donors
+</div>
+<div class="ll-float-card" style="top:35%; left:0%">
+  <div class="ll-float-card__icon">
+    <!-- blood drop SVG -->
+  </div>
+  Blood Banks
+</div>
+<div class="ll-float-card" style="bottom:20%; left:5%">
+  <div class="ll-float-card__icon">
+    <!-- bell SVG -->
+  </div>
+  Notifications
+</div>
+<div class="ll-float-card" style="top:10%; right:0%">
+  <div class="ll-float-card__icon">
+    <!-- hospital SVG -->
+  </div>
+  Hospitals
+</div>
+<div class="ll-float-card" style="bottom:25%; right:2%">
+  <div class="ll-float-card__icon">
+    <!-- chart SVG -->
+  </div>
+  Reports
+</div>
+```
+
+### Update stat cards to include icons
+
+Each `ll-stat-card` in the `*ngFor` should include an icon circle. Since the component is using `*ngFor` over the `stats` array, either:
+- Add an `icon` property to each stat object in the TypeScript, or
+- Hardcode the 4 stat cards directly in HTML (replacing the `*ngFor`) with their specific icons
+
+### Update social proof section (add below CTA buttons)
+
+```html
+<div class="ll-social-proof">
+  <div class="ll-avatars">
+    <div class="ll-avatar ll-avatar--1">👤</div>
+    <div class="ll-avatar ll-avatar--2">👤</div>
+    <div class="ll-avatar ll-avatar--3">👤</div>
+    <div class="ll-avatar ll-avatar--plus">+</div>
+  </div>
+  <div class="ll-social-proof__text">
+    <strong>Join <span class="ll-red">25,000+</span> heroes</strong>
+    <span>who are saving lives</span>
+  </div>
+</div>
+```
+
+```scss
+.ll-social-proof {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 32px;
+}
+
+.ll-avatars {
+  display: flex;
+  .ll-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid white;
+    margin-left: -8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    background: #e0c8b0;
+    &:first-child { margin-left: 0; }
+    &--1 { background: #c8a882; }
+    &--2 { background: #a07850; }
+    &--3 { background: #d4b090; }
+    &--plus {
+      background: var(--redLight);
+      color: var(--red);
+      font-weight: 700;
+      font-size: 13px;
+    }
+  }
+}
+
+.ll-social-proof__text {
+  display: flex; flex-direction: column;
+  font-size: 14px;
+  strong { font-weight: 700; color: var(--dark); font-size: 15px; }
+  span { color: var(--muted); font-size: 13px; }
+}
+.ll-red { color: var(--red); }
+```
+
+---
+
+## Features Section Eyebrow Update
+
+In the HTML, find the features section eyebrow and change:
+```html
+<!-- FROM -->
+<div class="ll-eyebrow">Why LifeLink</div>
+<h2 class="ll-section__title">Everything you need to manage blood donations</h2>
+
+<!-- TO -->
+<p class="ll-eyebrow-plain">SMART. SIMPLE. IMPACTFUL.</p>
+<h2 class="ll-section__title">Everything You Need to <span style="color: var(--red)">Save Lives</span></h2>
+```
+
+```scss
+.ll-eyebrow-plain {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 16px;
+}
+```
+
+---
+
+## Checklist Before Finishing
+
+- [ ] Hero background is pure white — no dark areas anywhere above the fold
+- [ ] Right half of hero has a light pink/blush radial gradient blob
+- [ ] Bottom of hero has red curved wave ribbons
+- [ ] Stats strip is a white card floating over the wave, not dark navy
+- [ ] Orbit rings replaced with 5 static floating cards with red circle icons
+- [ ] Central drop has ECG heartbeat line in white
+- [ ] Social proof avatars + "25,000+" text appear below CTAs
+- [ ] Features eyebrow says "SMART. SIMPLE. IMPACTFUL." in plain red text
+- [ ] "Get Started →" button in navbar has arrow
+- [ ] Navbar subtitle "Blood Donation System" appears under logo name
+- [ ] "Request Blood" button has blood drop icon on right side
+- [ ] All animations (floatY, dropFloat, pulse) still work
+- [ ] Page is fully responsive — floating cards hide or reposition below 768px
+- [ ] No TypeScript file changes
