@@ -8,7 +8,7 @@ import { BloodInventory, InventoryDto } from '../models/inventory.model';
   providedIn: 'root'
 })
 export class InventoryService {
-  private apiUrl = 'http://localhost:8080/api/inventory';
+  private apiUrl = '/api/inventory';
 
   constructor(private http: HttpClient) {}
 

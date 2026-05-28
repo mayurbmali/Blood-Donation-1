@@ -8,7 +8,7 @@ import { Donor, DonorDto } from '../models/donor.model';
   providedIn: 'root'
 })
 export class DonorService {
-  private apiUrl = 'http://localhost:8080/api/donors';
+  private apiUrl = '/api/donors';
 
   constructor(private http: HttpClient) {}
 
