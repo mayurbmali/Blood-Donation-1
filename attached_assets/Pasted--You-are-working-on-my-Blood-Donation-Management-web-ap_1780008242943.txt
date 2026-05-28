@@ -1,0 +1,206 @@
+
+
+You are working on my Blood Donation Management web app (Angular frontend + Spring Boot backend). The current landing page looks clean but I want the **entire web app** to feel **premium, modern, sleek, professional**, with a consistent theme and design system across all pages and components.
+
+### Goals
+
+1. Apply a **global premium UI design system** across the full Angular app (not only landing page):
+
+* consistent typography hierarchy
+* consistent spacing rhythm
+* consistent border radius and shadows
+* consistent buttons, inputs, cards, tables, nav, modals, alerts, toasts
+* consistent layout grid + section structure
+* better trust/credibility UI blocks where relevant
+* do NOT break existing functionality
+
+2. Add **Light/Dark Mode Toggle** with persistence:
+
+* toggle in navbar (icon + label optional)
+* persists theme selection in localStorage
+* respects system theme on first load if user hasn’t chosen
+* applies to entire app including landing page, auth pages, donor/hospital/admin dashboards
+
+### Constraints
+
+* DO NOT remove or break any feature, routes, API integrations, authentication, role-based access, CRUD flows, validations.
+* Only UI/UX + theme changes + new toggle behavior.
+* Refactor safely: update styles + component UI gradually but consistently.
+* Prefer reusable styles and shared components; avoid repeating CSS in every component.
+* Ensure responsive design across desktop/tablet/mobile.
+
+---
+
+# Part A — Build a Global Premium Design System
+
+## 1) Typography & Hierarchy (Premium Feel)
+
+Implement a consistent typography system:
+
+* Use a modern professional font pair (choose one and apply globally):
+
+  * Option A: Inter (body) + Sora (headings)
+  * Option B: Manrope (body) + Manrope (headings, weight variation)
+* Headings should feel more “designed”:
+
+  * H1: large, strong weight, tight letter spacing
+  * H2/H3: clean hierarchy
+  * Body: 16–18px, slightly softer text color than pure black/white
+* Reduce random font sizes and enforce a small set of tokens.
+
+## 2) Spacing Rhythm + Layout Tokens
+
+Create a spacing scale and apply consistently:
+
+* Use spacing tokens like 4, 8, 12, 16, 24, 32, 48, 64, 96
+* Ensure sections have consistent vertical rhythm (ex: 96px desktop, 64px mobile)
+* Align elements on a grid; reduce “floating” placements.
+
+## 3) Colors & Brand (Keep Red Accent but Premium)
+
+Keep blood-red as the primary accent but refine palette:
+
+* Provide:
+
+  * primary red scale (50–900)
+  * neutral gray scale (50–900)
+  * success/warning/error/info colors
+* Avoid harsh pure black; use neutral shades.
+* Use subtle background tints for alternating sections (especially landing page).
+
+## 4) Buttons / Cards / Inputs (Micro-Polish)
+
+Standardize component styles:
+
+* Buttons:
+
+  * one clear primary style (filled)
+  * secondary (outline)
+  * tertiary (ghost)
+  * consistent radius, padding, font weight
+  * hover: subtle lift + softer shadow + smooth transitions (150–200ms)
+* Cards:
+
+  * consistent radius (example 16px)
+  * consistent shadow style and border
+  * hover: border slightly stronger + shadow slightly softer (not bigger)
+* Inputs:
+
+  * consistent height, padding, focus ring
+  * focus should feel “premium” (soft ring, not harsh)
+* Tables (admin dashboards):
+
+  * zebra subtle, sticky header optional, better spacing, clear states
+
+## 5) Shadows, Borders, Radius Consistency
+
+Create and reuse tokens:
+
+* radius-sm, radius-md, radius-lg
+* shadow-sm, shadow-md (soft and modern)
+* border color tokens for light and dark
+
+## 6) Trust & Credibility UI Improvements (No new video)
+
+Add reusable “TrustStrip” component and use it on landing page and optionally relevant dashboards:
+
+* Examples of trust items:
+
+  * Verified profiles
+  * Secure data (encrypted)
+  * Role-based access
+  * Audit-ready reports
+    Use subtle icons and clean layout.
+
+Also add a “Partner/Supported by” logo strip under landing page stats (use placeholders if real logos not available). Make it look like SaaS credibility strip (low opacity, consistent size).
+
+## 7) CTA Priority Cleanup (Landing + elsewhere)
+
+Make sure in hero sections:
+
+* Only ONE primary CTA (filled)
+* Secondary CTA is outline
+* Add microcopy under CTA (ex: “Takes 30 seconds • Verified donors • Privacy-safe”)
+
+## 8) Apply to Entire App
+
+Ensure the same theme is applied to:
+
+* Landing page
+* login/register screens
+* donor dashboard pages
+* hospital pages (request blood, status, etc.)
+* admin pages (inventory, users/donors, reports)
+* all cards, lists, modals, tables, forms
+  Replace inconsistent styling with shared components/styles.
+
+---
+
+# Part B — Implement Light/Dark Theme Toggle
+
+## Requirements
+
+* Theme toggle visible on navbar/header.
+* Two themes: light and dark.
+* Persist user choice in localStorage (e.g., key: "app-theme").
+* On first load, if no stored theme, detect `prefers-color-scheme` and apply it.
+* Ensure theme affects:
+
+  * background, text, surfaces (cards), borders, shadows
+  * buttons, inputs, tables
+  * charts/graphs if any (at least readable)
+* Provide smooth transition (like 150ms) but avoid slow/flashy.
+
+## Implementation Guidance (Angular)
+
+* Create a `ThemeService`:
+
+  * `getTheme()`, `setTheme(theme)`, `toggleTheme()`
+  * applies theme by setting attribute on `<html>` or `<body>` like `data-theme="dark"`
+  * uses localStorage persistence
+  * reads system preference on init if no stored theme
+* Add a `ThemeToggleComponent`:
+
+  * icon changes (sun/moon)
+  * accessible: aria-label, keyboard friendly
+* Add global styles for both themes using CSS variables.
+* Use CSS variables everywhere (not hardcoded colors):
+
+  * `--bg`, `--surface`, `--text`, `--muted-text`, `--border`, `--primary`, `--primary-hover`, `--shadow`, etc.
+* Update existing SCSS/CSS to replace hardcoded colors with variables.
+
+---
+
+# Deliverables
+
+1. A global design system applied across the entire Angular app:
+
+   * centralized styles/tokens
+   * consistent typography, spacing, buttons, cards, forms, tables
+2. Landing page improvements excluding video:
+
+   * improved CTA hierarchy
+   * partner logo strip
+   * trust strip
+   * more premium spacing and section rhythm
+3. Dark/Light toggle implemented with persistence and system preference support
+4. No broken routes, no broken auth, no broken API calls, no broken role flows
+
+---
+
+# Testing Checklist (must do)
+
+* Verify pages in both light and dark mode:
+
+  * Landing page
+  * Login/Register
+  * Donor area
+  * Hospital area
+  * Admin dashboards + tables
+* Verify theme persists after refresh and navigation.
+* Verify no unreadable text or low contrast in dark mode.
+* Verify responsive layout on mobile widths.
+
+Now proceed to implement these changes in the existing codebase with clean commits and minimal risk refactoring.
+
+
