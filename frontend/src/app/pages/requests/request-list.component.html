@@ -77,12 +77,54 @@
     </div>
   </mat-card>
 
-  <!-- Non-admin view: confirmation of submission -->
-  <mat-card class="card info-card" *ngIf="!isAdmin()" style="max-width: 600px; margin: 0 auto; text-align: center; padding: 40px 24px;">
-    <mat-card-content class="flex-col align-center" style="gap: 16px;">
-      <mat-icon style="font-size: 56px; width: 56px; height: 56px; color: var(--primary);">healing</mat-icon>
-      <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Request Blood Units</h2>
-      <p class="text-muted" style="margin: 0; max-width: 420px; line-height: 1.5;">Click the "Add Request" button in the upper right to submit a new blood request. Once submitted, the system administrator will review and process your request based on available stock levels.</p>
-    </mat-card-content>
-  </mat-card>
+  <!-- Non-admin view: donor's own requests table -->
+  <div *ngIf="!isAdmin()">
+    <mat-card class="card table-card" *ngIf="requests.length > 0">
+      <table mat-table [dataSource]="requests" class="w-full">
+
+        <ng-container matColumnDef="requesterName">
+          <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Requester Name </th>
+          <td mat-cell *matCellDef="let element"> {{ element.requesterName }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="bloodGroup">
+          <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Blood Group </th>
+          <td mat-cell *matCellDef="let element"> <strong>{{ element.bloodGroup.replace('_POS', '+').replace('_NEG', '-') }}</strong> </td>
+        </ng-container>
+
+        <ng-container matColumnDef="units">
+          <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Units </th>
+          <td mat-cell *matCellDef="let element"> {{ element.units }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Status </th>
+          <td mat-cell *matCellDef="let element">
+            <app-status-chip [status]="element.status"></app-status-chip>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="createdAt">
+          <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Date </th>
+          <td mat-cell *matCellDef="let element"> {{ element.createdAt | date:'mediumDate' }} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let element"></td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </mat-card>
+
+    <mat-card class="card info-card" *ngIf="requests.length === 0" style="max-width: 600px; margin: 0 auto; text-align: center; padding: 40px 24px;">
+      <mat-card-content class="flex-col align-center" style="gap: 16px;">
+        <mat-icon style="font-size: 56px; width: 56px; height: 56px; color: var(--primary);">healing</mat-icon>
+        <h2 style="margin: 0; font-size: 20px; font-weight: 600;">No Requests Yet</h2>
+        <p class="text-muted" style="margin: 0; max-width: 420px; line-height: 1.5;">Click the "Add Request" button to submit your first blood request. Once submitted, an admin will review and approve it based on available stock.</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

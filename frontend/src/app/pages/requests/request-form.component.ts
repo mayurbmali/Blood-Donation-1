@@ -42,7 +42,6 @@ export class RequestFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.requestForm = this.fb.group({
-      requesterName: ['', Validators.required],
       bloodGroup: ['', Validators.required],
       units: [1, [Validators.required, Validators.min(1)]]
     });

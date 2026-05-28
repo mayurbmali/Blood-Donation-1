@@ -1,0 +1,2062 @@
+# Blood Donation App — Full Fix Prompt for Replit AI
+
+## Project Context
+
+This is a **Blood Donation Management System** with:
+- **Backend**: Spring Boot 3, Java 17+, Spring Security + JWT, Spring Data JPA, MySQL
+- **Frontend**: Angular 17 (standalone components), Angular Material UI
+- **DB**: `blood_donation_db`, user: `root`, password: `Mayur@121`
+- **Base package**: `com.blooddonation`
+- **Main class**: `BloodDonationApplication.java`
+- **Frontend**: `client/` directory with Angular, proxying to `http://localhost:8080`
+
+---
+
+## Summary of All Required Changes
+
+Apply **all** of the following changes. They are ordered so that backend entity/model changes come first, then services, then controllers, then frontend.
+
+---
+
+## BACKEND CHANGES
+
+---
+
+### 1. `AuthResponse.java` — Add `id` field
+
+**File**: `backend/src/main/java/com/blooddonation/dto/AuthResponse.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.dto;
+
+import com.blooddonation.model.Role;
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponse {
+    private Long id;
+    private String token;
+    private String name;
+    private Role role;
+}
+```
+
+---
+
+### 2. `RegisterRequest.java` — Remove `role` field (public registration is always DONOR)
+
+**File**: `backend/src/main/java/com/blooddonation/dto/RegisterRequest.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class RegisterRequest {
+
+    @NotBlank(message = "Name is required")
+    private String name;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
+
+    @NotBlank(message = "Password is required")
+    private String password;
+}
+```
+
+---
+
+### 3. `AuthService.java` — Force DONOR role on register; return `id` in response
+
+**File**: `backend/src/main/java/com/blooddonation/service/AuthService.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.service;
+
+import com.blooddonation.dto.AuthResponse;
+import com.blooddonation.dto.LoginRequest;
+import com.blooddonation.dto.RegisterRequest;
+import com.blooddonation.model.Role;
+import com.blooddonation.model.User;
+import com.blooddonation.repository.UserRepository;
+import com.blooddonation.security.JwtService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class AuthService {
+
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+    private final AuthenticationManager authenticationManager;
+
+    public AuthResponse register(RegisterRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email is already in use");
+        }
+
+        // Public registration always creates a DONOR — never an ADMIN
+        User user = User.builder()
+                .name(request.getName())
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(Role.DONOR)
+                .build();
+
+        User savedUser = userRepository.save(user);
+        String jwtToken = jwtService.generateToken(savedUser);
+
+        return AuthResponse.builder()
+                .id(savedUser.getId())
+                .token(jwtToken)
+                .name(savedUser.getName())
+                .role(savedUser.getRole())
+                .build();
+    }
+
+    public AuthResponse login(LoginRequest request) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+
+        String jwtToken = jwtService.generateToken(user);
+
+        return AuthResponse.builder()
+                .id(user.getId())
+                .token(jwtToken)
+                .name(user.getName())
+                .role(user.getRole())
+                .build();
+    }
+}
+```
+
+---
+
+### 4. `BloodRequest.java` — Add `requester` FK to `User`
+
+**File**: `backend/src/main/java/com/blooddonation/model/BloodRequest.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDateTime;
+
+@Entity
+@Table(name = "blood_requests")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class BloodRequest {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    // Stored display name — auto-populated from the authenticated user on create
+    @Column(name = "requester_name", nullable = false)
+    private String requesterName;
+
+    // FK to the user who submitted this request
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "requester_id", nullable = true)
+    private User requester;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "blood_group", nullable = false)
+    private BloodGroup bloodGroup;
+
+    @Column(nullable = false)
+    private Integer units;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RequestStatus status;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+}
+```
+
+---
+
+### 5. `BloodRequestDto.java` — Remove `requesterName` (auto-filled from auth principal)
+
+**File**: `backend/src/main/java/com/blooddonation/dto/BloodRequestDto.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.dto;
+
+import com.blooddonation.model.BloodGroup;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class BloodRequestDto {
+
+    @NotNull(message = "Blood group is required")
+    private BloodGroup bloodGroup;
+
+    @NotNull(message = "Units is required")
+    @Min(value = 1, message = "Units must be at least 1")
+    private Integer units;
+}
+```
+
+---
+
+### 6. `BloodRequestRepository.java` — Add `findByRequester` query
+
+**File**: `backend/src/main/java/com/blooddonation/repository/BloodRequestRepository.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.repository;
+
+import com.blooddonation.model.BloodRequest;
+import com.blooddonation.model.RequestStatus;
+import com.blooddonation.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import java.util.List;
+
+public interface BloodRequestRepository extends JpaRepository<BloodRequest, Long> {
+    List<BloodRequest> findByStatus(RequestStatus status);
+    List<BloodRequest> findByRequester(User requester);
+    List<BloodRequest> findByOrderByCreatedAtDesc();
+    List<BloodRequest> findByRequesterOrderByCreatedAtDesc(User requester);
+}
+```
+
+---
+
+### 7. `BloodRequestService.java` — Fix delete (restore inventory on APPROVED); link requester; add getMyRequests
+
+**File**: `backend/src/main/java/com/blooddonation/service/BloodRequestService.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.service;
+
+import com.blooddonation.dto.BloodRequestDto;
+import com.blooddonation.exception.ResourceNotFoundException;
+import com.blooddonation.model.BloodRequest;
+import com.blooddonation.model.RequestStatus;
+import com.blooddonation.model.User;
+import com.blooddonation.repository.BloodRequestRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class BloodRequestService {
+
+    private final BloodRequestRepository requestRepository;
+    private final BloodInventoryService inventoryService;
+
+    public BloodRequest create(BloodRequestDto dto, User requester) {
+        BloodRequest request = BloodRequest.builder()
+                .requesterName(requester.getName())
+                .requester(requester)
+                .bloodGroup(dto.getBloodGroup())
+                .units(dto.getUnits())
+                .status(RequestStatus.PENDING)
+                .build();
+        return requestRepository.save(request);
+    }
+
+    public List<BloodRequest> getAll() {
+        return requestRepository.findByOrderByCreatedAtDesc();
+    }
+
+    public List<BloodRequest> getByRequester(User requester) {
+        return requestRepository.findByRequesterOrderByCreatedAtDesc(requester);
+    }
+
+    @Transactional
+    public BloodRequest updateStatus(Long id, RequestStatus status) {
+        BloodRequest request = requestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Blood request not found with id: " + id));
+
+        if (status == RequestStatus.APPROVED && request.getStatus() != RequestStatus.APPROVED) {
+            inventoryService.decreaseStock(request.getBloodGroup(), request.getUnits());
+        }
+
+        if (request.getStatus() == RequestStatus.APPROVED && status != RequestStatus.APPROVED) {
+            inventoryService.increaseStock(request.getBloodGroup(), request.getUnits());
+        }
+
+        request.setStatus(status);
+        return requestRepository.save(request);
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        BloodRequest request = requestRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Blood request not found with id: " + id));
+
+        // CRITICAL FIX: If the request was APPROVED, restore inventory before deleting
+        if (request.getStatus() == RequestStatus.APPROVED) {
+            inventoryService.increaseStock(request.getBloodGroup(), request.getUnits());
+        }
+
+        requestRepository.delete(request);
+    }
+}
+```
+
+---
+
+### 8. `BloodRequestController.java` — Inject principal; add GET /my for donors
+
+**File**: `backend/src/main/java/com/blooddonation/controller/BloodRequestController.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.controller;
+
+import com.blooddonation.dto.BloodRequestDto;
+import com.blooddonation.model.BloodRequest;
+import com.blooddonation.model.RequestStatus;
+import com.blooddonation.model.User;
+import com.blooddonation.repository.UserRepository;
+import com.blooddonation.service.BloodRequestService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/requests")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
+public class BloodRequestController {
+
+    private final BloodRequestService requestService;
+    private final UserRepository userRepository;
+
+    // Admin only: see all requests
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<BloodRequest>> getAll() {
+        return ResponseEntity.ok(requestService.getAll());
+    }
+
+    // Donor: see only their own requests
+    @GetMapping("/my")
+    public ResponseEntity<List<BloodRequest>> getMyRequests(Principal principal) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(requestService.getByRequester(user));
+    }
+
+    // Any authenticated user can create a request (name auto-filled from their account)
+    @PostMapping
+    public ResponseEntity<BloodRequest> create(
+            @Valid @RequestBody BloodRequestDto dto,
+            Principal principal
+    ) {
+        User user = userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return new ResponseEntity<>(requestService.create(dto, user), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BloodRequest> updateStatus(
+            @PathVariable Long id,
+            @RequestParam RequestStatus status
+    ) {
+        return ResponseEntity.ok(requestService.updateStatus(id, status));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        requestService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+```
+
+---
+
+### 9. `DonorDto.java` — Remove `lastDonationDate`; add `@Max(65)` on age
+
+**File**: `backend/src/main/java/com/blooddonation/dto/DonorDto.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.dto;
+
+import com.blooddonation.model.BloodGroup;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DonorDto {
+
+    @NotNull(message = "Blood group is required")
+    private BloodGroup bloodGroup;
+
+    @NotNull(message = "Age is required")
+    @Min(value = 18, message = "Age must be at least 18")
+    @Max(value = 65, message = "Age must be 65 or under")
+    private Integer age;
+
+    @NotBlank(message = "Phone number is required")
+    private String phone;
+
+    // lastDonationDate is REMOVED — it is derived from DonationHistory, not manually entered
+}
+```
+
+---
+
+### 10. `DonationHistory.java` — Add `bloodGroupAtDonation` snapshot field
+
+**File**: `backend/src/main/java/com/blooddonation/model/DonationHistory.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.model;
+
+import jakarta.persistence.*;
+import lombok.*;
+import java.time.LocalDate;
+
+@Entity
+@Table(name = "donation_history")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DonationHistory {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "donor_id", nullable = false)
+    private Donor donor;
+
+    @Column(name = "units_donated", nullable = false)
+    private Integer unitsDonated;
+
+    @Column(name = "donation_date", nullable = false)
+    private LocalDate donationDate;
+
+    // Snapshot of blood group at time of donation — prevents history corruption if donor profile is edited
+    @Enumerated(EnumType.STRING)
+    @Column(name = "blood_group_at_donation")
+    private BloodGroup bloodGroupAtDonation;
+}
+```
+
+---
+
+### 11. `DonationHistoryService.java` — Add 56-day cooldown; store blood group snapshot; remove lastDonationDate from donor
+
+**File**: `backend/src/main/java/com/blooddonation/service/DonationHistoryService.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.service;
+
+import com.blooddonation.dto.DonationDto;
+import com.blooddonation.exception.ResourceNotFoundException;
+import com.blooddonation.model.DonationHistory;
+import com.blooddonation.model.Donor;
+import com.blooddonation.repository.DonationHistoryRepository;
+import com.blooddonation.repository.DonorRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class DonationHistoryService {
+
+    private static final int MINIMUM_DAYS_BETWEEN_DONATIONS = 56;
+
+    private final DonationHistoryRepository donationHistoryRepository;
+    private final DonorRepository donorRepository;
+    private final BloodInventoryService inventoryService;
+
+    @Transactional
+    public DonationHistory add(DonationDto dto) {
+        Donor donor = donorRepository.findById(dto.getDonorId())
+                .orElseThrow(() -> new ResourceNotFoundException("Donor not found with id: " + dto.getDonorId()));
+
+        // 56-day cooldown check
+        if (donor.getLastDonationDate() != null) {
+            long daysSinceLast = ChronoUnit.DAYS.between(donor.getLastDonationDate(), dto.getDonationDate());
+            if (daysSinceLast < MINIMUM_DAYS_BETWEEN_DONATIONS) {
+                long daysRemaining = MINIMUM_DAYS_BETWEEN_DONATIONS - daysSinceLast;
+                throw new IllegalArgumentException(
+                    "Donor " + donor.getUser().getName() + " must wait " + daysRemaining +
+                    " more day(s) before donating again (minimum 56 days between donations)."
+                );
+            }
+        }
+
+        // Store a snapshot of the blood group at the time of donation
+        DonationHistory donation = DonationHistory.builder()
+                .donor(donor)
+                .unitsDonated(dto.getUnitsDonated())
+                .donationDate(dto.getDonationDate())
+                .bloodGroupAtDonation(donor.getBloodGroup())
+                .build();
+
+        // Update donor's lastDonationDate only from actual recorded donations
+        if (donor.getLastDonationDate() == null || dto.getDonationDate().isAfter(donor.getLastDonationDate())) {
+            donor.setLastDonationDate(dto.getDonationDate());
+            donorRepository.save(donor);
+        }
+
+        inventoryService.increaseStock(donor.getBloodGroup(), dto.getUnitsDonated());
+
+        return donationHistoryRepository.save(donation);
+    }
+
+    public List<DonationHistory> getByDonor(Long donorId) {
+        return donationHistoryRepository.findByDonorId(donorId);
+    }
+
+    public List<DonationHistory> getAll() {
+        return donationHistoryRepository.findAll();
+    }
+}
+```
+
+---
+
+### 12. `Donor.java` — Keep `lastDonationDate` as a system-managed field (not user-editable)
+
+No changes to `Donor.java` are needed. The field remains as-is. It will only be updated by `DonationHistoryService`, not by the edit form.
+
+---
+
+### 13. `DonorService.java` — Remove `lastDonationDate` from `update()`; add `createSelf()` for donor self-registration
+
+**File**: `backend/src/main/java/com/blooddonation/service/DonorService.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.service;
+
+import com.blooddonation.dto.DonorDto;
+import com.blooddonation.exception.ResourceNotFoundException;
+import com.blooddonation.model.BloodGroup;
+import com.blooddonation.model.Donor;
+import com.blooddonation.model.User;
+import com.blooddonation.repository.DonorRepository;
+import com.blooddonation.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class DonorService {
+
+    private final DonorRepository donorRepository;
+    private final UserRepository userRepository;
+
+    // Admin creates a donor profile for a specific userId
+    public Donor create(DonorDto dto, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+
+        if (donorRepository.findByUserId(userId).isPresent()) {
+            throw new IllegalArgumentException("Donor profile already exists for this user");
+        }
+
+        Donor donor = Donor.builder()
+                .user(user)
+                .bloodGroup(dto.getBloodGroup())
+                .age(dto.getAge())
+                .phone(dto.getPhone())
+                .build();
+
+        return donorRepository.save(donor);
+    }
+
+    // Donor self-creates their own profile after registration
+    public Donor createSelf(DonorDto dto, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        if (donorRepository.findByUserId(user.getId()).isPresent()) {
+            throw new IllegalArgumentException("You already have a donor profile");
+        }
+
+        Donor donor = Donor.builder()
+                .user(user)
+                .bloodGroup(dto.getBloodGroup())
+                .age(dto.getAge())
+                .phone(dto.getPhone())
+                .build();
+
+        return donorRepository.save(donor);
+    }
+
+    public List<Donor> getAll() {
+        return donorRepository.findAll();
+    }
+
+    public Donor getById(Long id) {
+        return donorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Donor not found with id: " + id));
+    }
+
+    public Donor getByUserId(Long userId) {
+        return donorRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Donor profile not found for user id: " + userId));
+    }
+
+    public Donor getByEmail(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+        return donorRepository.findByUserId(user.getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Donor profile not found for email: " + email));
+    }
+
+    public Donor update(Long id, DonorDto dto) {
+        Donor donor = getById(id);
+        donor.setBloodGroup(dto.getBloodGroup());
+        donor.setAge(dto.getAge());
+        donor.setPhone(dto.getPhone());
+        // lastDonationDate is NOT updated here — it is managed only by DonationHistoryService
+        return donorRepository.save(donor);
+    }
+
+    public void delete(Long id) {
+        Donor donor = getById(id);
+        donorRepository.delete(donor);
+    }
+
+    public List<Donor> getByBloodGroup(BloodGroup bg) {
+        return donorRepository.findByBloodGroup(bg);
+    }
+}
+```
+
+---
+
+### 14. `DonorController.java` — Add `POST /me` endpoint for donor self-registration; add `GET /users-without-profile` for admin
+
+**File**: `backend/src/main/java/com/blooddonation/controller/DonorController.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.controller;
+
+import com.blooddonation.dto.DonorDto;
+import com.blooddonation.model.BloodGroup;
+import com.blooddonation.model.Donor;
+import com.blooddonation.service.DonorService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/donors")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
+public class DonorController {
+
+    private final DonorService donorService;
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Donor>> getAll() {
+        return ResponseEntity.ok(donorService.getAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Donor> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(donorService.getById(id));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Donor> getByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(donorService.getByUserId(userId));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<Donor> getMyProfile(Principal principal) {
+        return ResponseEntity.ok(donorService.getByEmail(principal.getName()));
+    }
+
+    @GetMapping("/bloodgroup/{bg}")
+    public ResponseEntity<List<Donor>> getByBloodGroup(@PathVariable BloodGroup bg) {
+        return ResponseEntity.ok(donorService.getByBloodGroup(bg));
+    }
+
+    // Admin creates a donor profile for a specific user (by userId query param)
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Donor> create(@Valid @RequestBody DonorDto dto, @RequestParam Long userId) {
+        return new ResponseEntity<>(donorService.create(dto, userId), HttpStatus.CREATED);
+    }
+
+    // Donor self-creates their own profile — no admin needed
+    @PostMapping("/me")
+    public ResponseEntity<Donor> createMyProfile(
+            @Valid @RequestBody DonorDto dto,
+            Principal principal
+    ) {
+        return new ResponseEntity<>(donorService.createSelf(dto, principal.getName()), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Donor> update(@PathVariable Long id, @Valid @RequestBody DonorDto dto) {
+        return ResponseEntity.ok(donorService.update(id, dto));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        donorService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+```
+
+---
+
+### 15. NEW FILE: `UserController.java` — Admin endpoint to list all users (for linking to donor profiles)
+
+**Create new file**: `backend/src/main/java/com/blooddonation/controller/UserController.java`
+
+```java
+package com.blooddonation.controller;
+
+import com.blooddonation.model.User;
+import com.blooddonation.repository.UserRepository;
+import com.blooddonation.repository.DonorRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:4200")
+public class UserController {
+
+    private final UserRepository userRepository;
+    private final DonorRepository donorRepository;
+
+    // List all registered users (admin only)
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<User>> getAll() {
+        return ResponseEntity.ok(userRepository.findAll());
+    }
+
+    // List users who do NOT yet have a donor profile (admin only — for creating donor profiles)
+    @GetMapping("/without-donor-profile")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<User>> getUsersWithoutDonorProfile() {
+        List<User> allUsers = userRepository.findAll();
+        List<User> usersWithoutProfile = allUsers.stream()
+                .filter(user -> donorRepository.findByUserId(user.getId()).isEmpty())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(usersWithoutProfile);
+    }
+}
+```
+
+---
+
+### 16. `DatabaseSeeder.java` — Also seed a default admin user on first run
+
+**File**: `backend/src/main/java/com/blooddonation/config/DatabaseSeeder.java`
+
+Replace entire file:
+
+```java
+package com.blooddonation.config;
+
+import com.blooddonation.model.BloodGroup;
+import com.blooddonation.model.BloodInventory;
+import com.blooddonation.model.Role;
+import com.blooddonation.model.User;
+import com.blooddonation.repository.BloodInventoryRepository;
+import com.blooddonation.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
+
+@Component
+@RequiredArgsConstructor
+public class DatabaseSeeder implements CommandLineRunner {
+
+    private final BloodInventoryRepository inventoryRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public void run(String... args) throws Exception {
+        // Seed all 8 blood group inventory records
+        for (BloodGroup group : BloodGroup.values()) {
+            if (inventoryRepository.findByBloodGroup(group).isEmpty()) {
+                inventoryRepository.save(
+                        BloodInventory.builder()
+                                .bloodGroup(group)
+                                .unitsAvailable(0)
+                                .build()
+                );
+            }
+        }
+
+        // Seed a default admin user if none exists
+        if (userRepository.findByEmail("admin@bloodbank.com").isEmpty()) {
+            User admin = User.builder()
+                    .name("System Admin")
+                    .email("admin@bloodbank.com")
+                    .password(passwordEncoder.encode("admin123"))
+                    .role(Role.ADMIN)
+                    .build();
+            userRepository.save(admin);
+            System.out.println("========================================");
+            System.out.println("Default admin created:");
+            System.out.println("  Email:    admin@bloodbank.com");
+            System.out.println("  Password: admin123");
+            System.out.println("  CHANGE THIS PASSWORD IN PRODUCTION.");
+            System.out.println("========================================");
+        }
+    }
+}
+```
+
+---
+
+## FRONTEND CHANGES
+
+---
+
+### 17. `auth.model.ts` — Add `id` to `AuthResponse`; remove `role` from `RegisterRequest`
+
+**File**: `frontend/src/app/core/models/auth.model.ts`
+
+Replace entire file:
+
+```typescript
+export interface LoginRequest {
+  email: string;
+  password?: string;
+}
+
+// Role is NOT included in RegisterRequest — backend always creates DONOR
+export interface RegisterRequest {
+  name: string;
+  email: string;
+  password?: string;
+}
+
+export interface AuthResponse {
+  id: number;
+  token: string;
+  name: string;
+  role: 'ADMIN' | 'DONOR';
+}
+
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'DONOR';
+  createdAt: string;
+}
+```
+
+---
+
+### 18. `auth.service.ts` — Expose `getUserId()` and `getUserName()`
+
+**File**: `frontend/src/app/core/services/auth.service.ts`
+
+Replace entire file:
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
+import { AuthResponse, LoginRequest, RegisterRequest } from '../models/auth.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AuthService {
+  private apiUrl = 'http://localhost:8080/api/auth';
+  private currentUserSubject = new BehaviorSubject<AuthResponse | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    const storedUser = localStorage.getItem('currentUser');
+    if (storedUser) {
+      try {
+        this.currentUserSubject.next(JSON.parse(storedUser));
+      } catch (e) {
+        localStorage.removeItem('currentUser');
+      }
+    }
+  }
+
+  public get currentUserValue(): AuthResponse | null {
+    return this.currentUserSubject.value;
+  }
+
+  login(request: LoginRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
+      map(user => {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        this.currentUserSubject.next(user);
+        return user;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  register(request: RegisterRequest): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/register`, request).pipe(
+      map(user => {
+        localStorage.setItem('currentUser', JSON.stringify(user));
+        this.currentUserSubject.next(user);
+        return user;
+      }),
+      catchError(this.handleError)
+    );
+  }
+
+  logout(): void {
+    localStorage.removeItem('currentUser');
+    this.currentUserSubject.next(null);
+  }
+
+  isLoggedIn(): boolean {
+    return this.currentUserValue !== null;
+  }
+
+  getToken(): string | null {
+    return this.currentUserValue ? this.currentUserValue.token : null;
+  }
+
+  getRole(): 'ADMIN' | 'DONOR' | null {
+    return this.currentUserValue ? this.currentUserValue.role : null;
+  }
+
+  getUserId(): number | null {
+    return this.currentUserValue ? this.currentUserValue.id : null;
+  }
+
+  getUserName(): string {
+    return this.currentUserValue ? this.currentUserValue.name : '';
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'An unknown error occurred!';
+    if (error.error && typeof error.error === 'object') {
+      errorMessage = error.error.message || JSON.stringify(error.error);
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    return throwError(() => errorMessage);
+  }
+}
+```
+
+---
+
+### 19. `register.component.ts` — Remove role field; default to DONOR
+
+**File**: `frontend/src/app/pages/register/register.component.ts`
+
+Replace entire file:
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { AuthService } from '../../core/services/auth.service';
+
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    RouterModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.scss']
+})
+export class RegisterComponent implements OnInit {
+  registerForm!: FormGroup;
+  loading = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    if (this.authService.isLoggedIn()) {
+      this.router.navigate(['/dashboard']);
+    }
+
+    this.registerForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(4)]]
+      // role is NOT in the form — backend always assigns DONOR
+    });
+  }
+
+  onSubmit(): void {
+    if (this.registerForm.invalid) {
+      return;
+    }
+
+    this.loading = true;
+    this.authService.register(this.registerForm.value).subscribe({
+      next: () => {
+        this.loading = false;
+        this.snackBar.open('Registration successful! Please complete your donor profile.', 'Close', { duration: 4000 });
+        this.router.navigate(['/donors']);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.snackBar.open(err || 'Registration failed', 'Close', { duration: 5000 });
+      }
+    });
+  }
+}
+```
+
+---
+
+### 20. `register.component.html` — Remove role dropdown
+
+**File**: `frontend/src/app/pages/register/register.component.html`
+
+Replace entire file:
+
+```html
+<div class="register-container">
+  <mat-card class="register-card">
+    <div class="register-header">
+      <h1 class="app-title">BloodBank</h1>
+      <p class="app-tagline">Create a donor account to get started</p>
+    </div>
+
+    <mat-card-content>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Full Name</mat-label>
+          <input matInput type="text" formControlName="name" placeholder="Enter your full name" required>
+          <mat-error *ngIf="registerForm.get('name')?.hasError('required')">Name is required</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email Address</mat-label>
+          <input matInput type="email" formControlName="email" placeholder="Enter your email" required autocomplete="email">
+          <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Please enter a valid email address</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" formControlName="password" placeholder="Create a password" required autocomplete="new-password">
+          <mat-error *ngIf="registerForm.get('password')?.hasError('required')">Password is required</mat-error>
+          <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Password must be at least 4 characters</mat-error>
+        </mat-form-field>
+
+        <!-- Role dropdown REMOVED — all public registrations are DONOR -->
+
+        <button mat-raised-button color="primary" type="submit" class="submit-btn w-full" [disabled]="registerForm.invalid || loading">
+          {{ loading ? 'Creating Account...' : 'Register as Donor' }}
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions class="register-actions">
+      <p class="login-link">Already have an account? <a routerLink="/login">Sign In Here</a></p>
+    </mat-card-actions>
+  </mat-card>
+</div>
+```
+
+---
+
+### 21. `request.model.ts` — Remove `requesterName` from DTO; add `requester` to response model
+
+**File**: `frontend/src/app/core/models/request.model.ts`
+
+Replace entire file:
+
+```typescript
+import { User } from './auth.model';
+
+export interface BloodRequest {
+  id: number;
+  requesterName: string;        // display name, auto-set from user on backend
+  requester?: User;             // linked user (present after fix)
+  bloodGroup: string;
+  units: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+}
+
+// requesterName is REMOVED from DTO — it's auto-populated from the logged-in user
+export interface BloodRequestDto {
+  bloodGroup: string;
+  units: number;
+}
+```
+
+---
+
+### 22. `request.service.ts` — Add `getMyRequests()` method
+
+**File**: `frontend/src/app/core/services/request.service.ts`
+
+Replace entire file:
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { BloodRequest, BloodRequestDto } from '../models/request.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class RequestService {
+  private apiUrl = 'http://localhost:8080/api/requests';
+
+  constructor(private http: HttpClient) {}
+
+  // Admin only
+  getAll(): Observable<BloodRequest[]> {
+    return this.http.get<BloodRequest[]>(this.apiUrl).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Donor: get only their own requests
+  getMyRequests(): Observable<BloodRequest[]> {
+    return this.http.get<BloodRequest[]>(`${this.apiUrl}/my`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  create(dto: BloodRequestDto): Observable<BloodRequest> {
+    return this.http.post<BloodRequest>(this.apiUrl, dto).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  updateStatus(id: number, status: 'PENDING' | 'APPROVED' | 'REJECTED'): Observable<BloodRequest> {
+    return this.http.put<BloodRequest>(`${this.apiUrl}/${id}/status?status=${status}`, {}).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'An error occurred!';
+    if (error.error && typeof error.error === 'object') {
+      errorMessage = error.error.message || JSON.stringify(error.error);
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    return throwError(() => errorMessage);
+  }
+}
+```
+
+---
+
+### 23. `request-form.component.ts` — Remove `requesterName` field
+
+**File**: `frontend/src/app/pages/requests/request-form.component.ts`
+
+Replace entire file:
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+
+@Component({
+  selector: 'app-request-form',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule
+  ],
+  templateUrl: './request-form.component.html',
+  styleUrls: ['./request-form.component.scss']
+})
+export class RequestFormComponent implements OnInit {
+  requestForm!: FormGroup;
+  bloodGroups = [
+    { value: 'A_POS', label: 'A+' },
+    { value: 'A_NEG', label: 'A-' },
+    { value: 'B_POS', label: 'B+' },
+    { value: 'B_NEG', label: 'B-' },
+    { value: 'AB_POS', label: 'AB+' },
+    { value: 'AB_NEG', label: 'AB-' },
+    { value: 'O_POS', label: 'O+' },
+    { value: 'O_NEG', label: 'O-' }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<RequestFormComponent>
+  ) {}
+
+  ngOnInit(): void {
+    // requesterName removed — auto-filled from logged-in user on backend
+    this.requestForm = this.fb.group({
+      bloodGroup: ['', Validators.required],
+      units: [1, [Validators.required, Validators.min(1)]]
+    });
+  }
+
+  onSubmit(): void {
+    if (this.requestForm.invalid) {
+      return;
+    }
+    this.dialogRef.close(this.requestForm.value);
+  }
+
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+}
+```
+
+---
+
+### 24. `request-form.component.html` — Remove `requesterName` input
+
+**File**: `frontend/src/app/pages/requests/request-form.component.html`
+
+Replace entire file:
+
+```html
+<h2 mat-dialog-title>Request Blood Units</h2>
+
+<form [formGroup]="requestForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="form-content flex-col" style="padding-top: 10px;">
+
+    <!-- Requester name is auto-filled from your account — no manual input needed -->
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Blood Group Needed</mat-label>
+      <mat-select formControlName="bloodGroup" required>
+        <mat-option *ngFor="let bg of bloodGroups" [value]="bg.value">{{ bg.label }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="requestForm.get('bloodGroup')?.hasError('required')">Blood Group is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Units Needed</mat-label>
+      <input matInput type="number" formControlName="units" min="1" required>
+      <mat-error *ngIf="requestForm.get('units')?.hasError('required')">Units is required</mat-error>
+      <mat-error *ngIf="requestForm.get('units')?.hasError('min')">Units must be at least 1</mat-error>
+    </mat-form-field>
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="requestForm.invalid" style="background-color: var(--primary); color: white;">
+      Submit Request
+    </button>
+  </mat-dialog-actions>
+</form>
+```
+
+---
+
+### 25. `request-list.component.ts` — Donors now load and view their own requests
+
+**File**: `frontend/src/app/pages/requests/request-list.component.ts`
+
+Replace entire file:
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { RequestService } from '../../core/services/request.service';
+import { AuthService } from '../../core/services/auth.service';
+import { BloodRequest } from '../../core/models/request.model';
+import { RequestFormComponent } from './request-form.component';
+import { StatusChipComponent } from '../../shared/status-chip.component';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+
+@Component({
+  selector: 'app-request-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    StatusChipComponent
+  ],
+  templateUrl: './request-list.component.html',
+  styleUrls: ['./request-list.component.scss']
+})
+export class RequestListComponent implements OnInit {
+  requests: BloodRequest[] = [];
+  displayedColumns: string[] = ['requesterName', 'bloodGroup', 'units', 'status', 'createdAt', 'actions'];
+
+  constructor(
+    private requestService: RequestService,
+    public authService: AuthService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.loadRequests();
+  }
+
+  loadRequests(): void {
+    if (this.isAdmin()) {
+      // Admin sees ALL requests
+      this.requestService.getAll().subscribe({
+        next: (res) => {
+          this.requests = res.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        },
+        error: (err) => this.snackBar.open(err || 'Failed to load requests', 'Close', { duration: 3000 })
+      });
+    } else {
+      // Donor sees ONLY their own requests
+      this.requestService.getMyRequests().subscribe({
+        next: (res) => {
+          this.requests = res.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        },
+        error: (err) => this.snackBar.open(err || 'Failed to load your requests', 'Close', { duration: 3000 })
+      });
+    }
+  }
+
+  isAdmin(): boolean {
+    return this.authService.getRole() === 'ADMIN';
+  }
+
+  openAddDialog(): void {
+    const dialogRef = this.dialog.open(RequestFormComponent, { width: '400px' });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.requestService.create(result).subscribe({
+          next: () => {
+            this.snackBar.open('Request submitted successfully!', 'Close', { duration: 3000 });
+            this.loadRequests();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to submit request', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+
+  updateStatus(request: BloodRequest, status: 'APPROVED' | 'REJECTED'): void {
+    this.requestService.updateStatus(request.id, status).subscribe({
+      next: () => {
+        this.snackBar.open(`Request ${status.toLowerCase()} successfully!`, 'Close', { duration: 3000 });
+        this.loadRequests();
+      },
+      error: (err) => this.snackBar.open(err || 'Failed to update status', 'Close', { duration: 5000 })
+    });
+  }
+
+  deleteRequest(request: BloodRequest): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: { message: `Are you sure you want to delete this request for ${request.requesterName}?` }
+    });
+
+    dialogRef.afterClosed().subscribe(confirm => {
+      if (confirm) {
+        this.requestService.delete(request.id).subscribe({
+          next: () => {
+            this.snackBar.open('Request deleted successfully!', 'Close', { duration: 3000 });
+            this.loadRequests();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to delete request', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+}
+```
+
+---
+
+### 26. `donor.model.ts` — Remove `lastDonationDate` from `DonorDto`; keep it on `Donor` (read-only)
+
+**File**: `frontend/src/app/core/models/donor.model.ts`
+
+Replace entire file:
+
+```typescript
+import { User } from './auth.model';
+
+export interface Donor {
+  id: number;
+  user: User;
+  bloodGroup: string;
+  age: number;
+  phone: string;
+  lastDonationDate?: string;   // read-only, managed by backend via donation history
+}
+
+// lastDonationDate is NOT in DonorDto — donors cannot manually set it
+export interface DonorDto {
+  bloodGroup: string;
+  age: number;
+  phone: string;
+}
+```
+
+---
+
+### 27. `donor.service.ts` — Add `createMyProfile()` for donor self-registration
+
+**File**: `frontend/src/app/core/services/donor.service.ts`
+
+Replace entire file:
+
+```typescript
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { Donor, DonorDto } from '../models/donor.model';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class DonorService {
+  private apiUrl = 'http://localhost:8080/api/donors';
+
+  constructor(private http: HttpClient) {}
+
+  getAll(): Observable<Donor[]> {
+    return this.http.get<Donor[]>(this.apiUrl).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getById(id: number): Observable<Donor> {
+    return this.http.get<Donor>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getByUserId(userId: number): Observable<Donor> {
+    return this.http.get<Donor>(`${this.apiUrl}/user/${userId}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getMyProfile(): Observable<Donor> {
+    return this.http.get<Donor>(`${this.apiUrl}/me`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  getByBloodGroup(bg: string): Observable<Donor[]> {
+    return this.http.get<Donor[]>(`${this.apiUrl}/bloodgroup/${bg}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Admin creates a donor profile for a specific user
+  create(dto: DonorDto, userId: number): Observable<Donor> {
+    return this.http.post<Donor>(`${this.apiUrl}?userId=${userId}`, dto).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  // Donor self-creates their own profile (no userId needed — resolved from JWT)
+  createMyProfile(dto: DonorDto): Observable<Donor> {
+    return this.http.post<Donor>(`${this.apiUrl}/me`, dto).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  update(id: number, dto: DonorDto): Observable<Donor> {
+    return this.http.put<Donor>(`${this.apiUrl}/${id}`, dto).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    let errorMessage = 'An error occurred!';
+    if (error.error && typeof error.error === 'object') {
+      errorMessage = error.error.message || JSON.stringify(error.error);
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    return throwError(() => errorMessage);
+  }
+}
+```
+
+---
+
+### 28. `donor-form.component.ts` — Remove `lastDonationDate`; handle donor self-create mode (no userId)
+
+**File**: `frontend/src/app/pages/donors/donor-form.component.ts`
+
+Replace entire file:
+
+```typescript
+import { Component, Inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { Donor } from '../../core/models/donor.model';
+
+@Component({
+  selector: 'app-donor-form',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule
+  ],
+  templateUrl: './donor-form.component.html',
+  styleUrls: ['./donor-form.component.scss']
+})
+export class DonorFormComponent implements OnInit {
+  donorForm!: FormGroup;
+  isEditMode = false;
+  isSelfMode = false;   // true when a donor is creating their own profile (no userId needed)
+
+  bloodGroups = [
+    { value: 'A_POS', label: 'A+' },
+    { value: 'A_NEG', label: 'A-' },
+    { value: 'B_POS', label: 'B+' },
+    { value: 'B_NEG', label: 'B-' },
+    { value: 'AB_POS', label: 'AB+' },
+    { value: 'AB_NEG', label: 'AB-' },
+    { value: 'O_POS', label: 'O+' },
+    { value: 'O_NEG', label: 'O-' }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<DonorFormComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { mode: 'add' | 'edit' | 'self'; donor?: Donor }
+  ) {}
+
+  ngOnInit(): void {
+    this.isEditMode = this.data.mode === 'edit';
+    this.isSelfMode = this.data.mode === 'self';
+    const donor = this.data.donor;
+
+    this.donorForm = this.fb.group({
+      // userId is only needed when an admin creates a profile for another user
+      userId: [
+        { value: donor ? donor.user.id : '', disabled: this.isEditMode || this.isSelfMode },
+        (!this.isEditMode && !this.isSelfMode) ? [Validators.required] : []
+      ],
+      bloodGroup: [donor ? donor.bloodGroup : '', Validators.required],
+      age: [donor ? donor.age : '', [Validators.required, Validators.min(18), Validators.max(65)]],
+      phone: [donor ? donor.phone : '', Validators.required]
+      // lastDonationDate REMOVED — managed only by the donation history system
+    });
+  }
+
+  onSubmit(): void {
+    if (this.donorForm.invalid) {
+      return;
+    }
+
+    const formVal = this.donorForm.getRawValue();
+
+    const donorPayload = {
+      bloodGroup: formVal.bloodGroup,
+      age: formVal.age,
+      phone: formVal.phone
+    };
+
+    if (this.isSelfMode) {
+      // Donor self-creates: no userId in payload
+      this.dialogRef.close({ donor: donorPayload, selfCreate: true });
+    } else {
+      this.dialogRef.close({ userId: formVal.userId, donor: donorPayload, selfCreate: false });
+    }
+  }
+
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+}
+```
+
+---
+
+### 29. `donor-form.component.html` — Remove `lastDonationDate` field; show correct title per mode
+
+**File**: `frontend/src/app/pages/donors/donor-form.component.html`
+
+Replace entire file:
+
+```html
+<h2 mat-dialog-title>
+  {{ isEditMode ? 'Edit Donor Profile' : (isSelfMode ? 'Complete Your Donor Profile' : 'Add New Donor') }}
+</h2>
+
+<form [formGroup]="donorForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="form-content flex-col" style="padding-top: 10px;">
+
+    <!-- User ID — only shown when admin is adding a profile for another user -->
+    <mat-form-field appearance="outline" class="w-full" *ngIf="!isEditMode && !isSelfMode">
+      <mat-label>User ID</mat-label>
+      <input matInput type="number" formControlName="userId" placeholder="Enter target user ID" required>
+      <mat-error *ngIf="donorForm.get('userId')?.hasError('required')">User ID is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Blood Group</mat-label>
+      <mat-select formControlName="bloodGroup" required>
+        <mat-option *ngFor="let bg of bloodGroups" [value]="bg.value">{{ bg.label }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="donorForm.get('bloodGroup')?.hasError('required')">Blood Group is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Age</mat-label>
+      <input matInput type="number" formControlName="age" placeholder="Must be 18–65" required>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('required')">Age is required</mat-error>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('min')">Age must be 18 or above</mat-error>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('max')">Age must be 65 or under</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Phone</mat-label>
+      <input matInput type="text" formControlName="phone" placeholder="Contact number" required>
+      <mat-error *ngIf="donorForm.get('phone')?.hasError('required')">Phone number is required</mat-error>
+    </mat-form-field>
+
+    <!-- Last Donation Date REMOVED — it is managed automatically by the donation history system -->
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="submit" [disabled]="donorForm.invalid" style="background-color: var(--primary); color: white;">
+      Save
+    </button>
+  </mat-dialog-actions>
+</form>
+```
+
+---
+
+### 30. `donor-list.component.ts` — Allow donor to self-create their profile; fix loading
+
+**File**: `frontend/src/app/pages/donors/donor-list.component.ts`
+
+Replace entire file:
+
+```typescript
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatTableModule } from '@angular/material/table';
+import { MatCardModule } from '@angular/material/card';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { DonorService } from '../../core/services/donor.service';
+import { AuthService } from '../../core/services/auth.service';
+import { Donor } from '../../core/models/donor.model';
+import { DonorFormComponent } from './donor-form.component';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
+
+@Component({
+  selector: 'app-donor-list',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatInputModule,
+    MatFormFieldModule,
+    MatDialogModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './donor-list.component.html',
+  styleUrls: ['./donor-list.component.scss']
+})
+export class DonorListComponent implements OnInit {
+  donors: Donor[] = [];
+  filteredDonors: Donor[] = [];
+  donorProfile: Donor | null = null;
+  hasProfile = false;
+  displayedColumns: string[] = ['name', 'bloodGroup', 'age', 'phone', 'lastDonation', 'actions'];
+
+  constructor(
+    private donorService: DonorService,
+    public authService: AuthService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    if (this.isAdmin()) {
+      this.donorService.getAll().subscribe({
+        next: (res) => {
+          this.donors = res;
+          this.filteredDonors = res;
+        },
+        error: (err) => this.snackBar.open(err || 'Failed to load donors', 'Close', { duration: 3000 })
+      });
+    } else {
+      this.donorService.getMyProfile().subscribe({
+        next: (res) => {
+          this.donorProfile = res;
+          this.hasProfile = true;
+        },
+        error: () => {
+          this.donorProfile = null;
+          this.hasProfile = false;
+        }
+      });
+    }
+  }
+
+  isAdmin(): boolean {
+    return this.authService.getRole() === 'ADMIN';
+  }
+
+  applyFilter(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value.toLowerCase();
+    this.filteredDonors = this.donors.filter(donor =>
+      donor.user.name.toLowerCase().includes(filterValue) ||
+      donor.phone.includes(filterValue)
+    );
+  }
+
+  // Opens a dialog for donor to self-create their profile
+  openSelfCreateDialog(): void {
+    const dialogRef = this.dialog.open(DonorFormComponent, {
+      width: '450px',
+      data: { mode: 'self' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.selfCreate) {
+        this.donorService.createMyProfile(result.donor).subscribe({
+          next: () => {
+            this.snackBar.open('Donor profile created successfully!', 'Close', { duration: 3000 });
+            this.loadData();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to create profile', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+
+  openAddDialog(): void {
+    const dialogRef = this.dialog.open(DonorFormComponent, {
+      width: '450px',
+      data: { mode: 'add' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && !result.selfCreate) {
+        this.donorService.create(result.donor, result.userId).subscribe({
+          next: () => {
+            this.snackBar.open('Donor added successfully!', 'Close', { duration: 3000 });
+            this.loadData();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to add donor', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+
+  openEditDialog(donor: Donor): void {
+    const dialogRef = this.dialog.open(DonorFormComponent, {
+      width: '450px',
+      data: { mode: 'edit', donor }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.donorService.update(donor.id, result.donor).subscribe({
+          next: () => {
+            this.snackBar.open('Donor updated successfully!', 'Close', { duration: 3000 });
+            this.loadData();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to update donor', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+
+  deleteDonor(donor: Donor): void {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '350px',
+      data: { message: `Are you sure you want to delete donor ${donor.user.name}?` }
+    });
+
+    dialogRef.afterClosed().subscribe(confirm => {
+      if (confirm) {
+        this.donorService.delete(donor.id).subscribe({
+          next: () => {
+            this.snackBar.open('Donor deleted successfully!', 'Close', { duration: 3000 })
+            this.loadData();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to delete donor', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+}
+```
+
+---
+
+### 31. `dashboard.component.ts` — Fix hardcoded donor count; show real donor stats for donor role
+
+**File**: `frontend/src/app/pages/dashboard/dashboard.component.ts`
+
+Replace the `loadData()` method's `else` block only. Find this code:
+
+```typescript
+    } else {
+      this.totalDonors = 1;
+      this.totalRequests = 0;
+      this.pendingRequests = 0;
+    }
+```
+
+And replace it with:
+
+```typescript
+    } else {
+      // Load donor's own profile stats
+      this.donorService.getMyProfile().subscribe({
+        next: (profile) => {
+          this.totalDonors = 1;  // The donor themselves
+          // Load their own request count
+          this.requestService.getMyRequests ? this.requestService.getMyRequests().subscribe({
+            next: (reqs) => {
+              this.totalRequests = reqs.length;
+              this.pendingRequests = reqs.filter(r => r.status === 'PENDING').length;
+            },
+            error: () => {}
+          }) : null;
+        },
+        error: () => {
+          this.totalDonors = 0;
+        }
+      });
+    }
+```
+
+Also add `RequestService` to the constructor imports in `dashboard.component.ts` if not already present:
+
+```typescript
+constructor(
+  private donorService: DonorService,
+  private requestService: RequestService,
+  private inventoryService: InventoryService,
+  public authService: AuthService
+) {}
+```
+
+---
+
+## DATABASE NOTES
+
+`spring.jpa.hibernate.ddl-auto=update` is already set so Hibernate will automatically:
+- Add the `requester_id` column to `blood_requests`
+- Add the `blood_group_at_donation` column to `donation_history`
+
+No manual migration script is needed. Both new columns are nullable so existing rows are unaffected.
+
+---
+
+## TESTING CHECKLIST
+
+After applying all changes, verify:
+
+1. **Register** — no role dropdown visible; new accounts are always DONOR
+2. **Login as `admin@bloodbank.com` / `admin123`** — seeded default admin works
+3. **Donor registers** → redirected to `/donors` → sees "Complete Your Donor Profile" button → fills form (age 18–65, blood group, phone) → profile created
+4. **Donor submits blood request** → request created with their name auto-filled → donor sees it in Requests list with status PENDING
+5. **Admin logs in** → sees all donors, all requests, all donations
+6. **Admin approves a request** → inventory decreases correctly
+7. **Admin deletes an APPROVED request** → inventory is RESTORED (the fix for Issue 2)
+8. **Admin logs a donation for same donor twice within 56 days** → error: "must wait N more days"
+9. **Donor tries to register as admin** → not possible — no role field on form
+10. **Last donation date** → only updates via donation history, not via edit form
+
+---
+
+## IMPORTANT: Do not change these files
+- `application.properties` (DB config is already correct)
+- `JwtService.java`, `JwtAuthenticationFilter.java`, `ApplicationConfig.java` (security infra is correct)
+- `BloodInventoryService.java`, `InventoryController.java` (inventory logic is correct)
+- `DonationHistoryController.java` (endpoint structure is correct)
+- All `.scss` / `.css` files
+- `pom.xml`

@@ -47,5 +47,6 @@ com/blooddonation/BloodDonationApplication.class
 com/blooddonation/security/ApplicationConfig.class
 com/blooddonation/controller/AuthController.class
 com/blooddonation/model/BloodInventory.class
+com/blooddonation/controller/UserController.class
 com/blooddonation/dto/RegisterRequest$RegisterRequestBuilder.class
 com/blooddonation/exception/ErrorResponse.class

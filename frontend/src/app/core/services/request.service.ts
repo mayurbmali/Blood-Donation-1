@@ -18,6 +18,12 @@ export class RequestService {
     );
   }
 
+  getMyRequests(): Observable<BloodRequest[]> {
+    return this.http.get<BloodRequest[]>(`${this.apiUrl}/my`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   create(dto: BloodRequestDto): Observable<BloodRequest> {
     return this.http.post<BloodRequest>(this.apiUrl, dto).pipe(
       catchError(this.handleError)

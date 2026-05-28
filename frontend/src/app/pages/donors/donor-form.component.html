@@ -1,10 +1,10 @@
-<h2 mat-dialog-title>{{ isEditMode ? 'Edit Donor Profile' : 'Add New Donor' }}</h2>
+<h2 mat-dialog-title>{{ isSelfMode ? 'Create My Donor Profile' : (isEditMode ? 'Edit Donor Profile' : 'Add New Donor') }}</h2>
 
 <form [formGroup]="donorForm" (ngSubmit)="onSubmit()">
   <mat-dialog-content class="form-content flex-col" style="padding-top: 10px;">
-    
-    <!-- User ID Field (Only in Add Mode) -->
-    <mat-form-field appearance="outline" class="w-full" *ngIf="!isEditMode">
+
+    <!-- User ID Field (Admin add mode only) -->
+    <mat-form-field appearance="outline" class="w-full" *ngIf="!isEditMode && !isSelfMode">
       <mat-label>User ID</mat-label>
       <input matInput type="number" formControlName="userId" placeholder="Enter target user ID" required>
       <mat-error *ngIf="donorForm.get('userId')?.hasError('required')">User ID is required</mat-error>
@@ -22,9 +22,10 @@
     <!-- Age -->
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Age</mat-label>
-      <input matInput type="number" formControlName="age" placeholder="Min 18" required>
+      <input matInput type="number" formControlName="age" placeholder="18 – 65" required>
       <mat-error *ngIf="donorForm.get('age')?.hasError('required')">Age is required</mat-error>
       <mat-error *ngIf="donorForm.get('age')?.hasError('min')">Age must be 18 or above</mat-error>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('max')">Age must be 65 or under</mat-error>
     </mat-form-field>
 
     <!-- Phone -->
@@ -34,20 +35,12 @@
       <mat-error *ngIf="donorForm.get('phone')?.hasError('required')">Phone number is required</mat-error>
     </mat-form-field>
 
-    <!-- Last Donation Date -->
-    <mat-form-field appearance="outline" class="w-full">
-      <mat-label>Last Donation Date</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="lastDonationDate" placeholder="Select date">
-      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-      <mat-datepicker #picker></mat-datepicker>
-    </mat-form-field>
-
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">
     <button mat-button type="button" (click)="onCancel()">Cancel</button>
     <button mat-raised-button color="primary" type="submit" [disabled]="donorForm.invalid" style="background-color: var(--primary); color: white;">
-      Save
+      {{ isSelfMode ? 'Create Profile' : 'Save' }}
     </button>
   </mat-dialog-actions>
 </form>

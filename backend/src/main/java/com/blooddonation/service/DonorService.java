@@ -31,7 +31,24 @@ public class DonorService {
                 .bloodGroup(dto.getBloodGroup())
                 .age(dto.getAge())
                 .phone(dto.getPhone())
-                .lastDonationDate(dto.getLastDonationDate())
+                .build();
+
+        return donorRepository.save(donor);
+    }
+
+    public Donor createSelf(DonorDto dto, String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + email));
+
+        if (donorRepository.findByUserId(user.getId()).isPresent()) {
+            throw new IllegalArgumentException("You already have a donor profile");
+        }
+
+        Donor donor = Donor.builder()
+                .user(user)
+                .bloodGroup(dto.getBloodGroup())
+                .age(dto.getAge())
+                .phone(dto.getPhone())
                 .build();
 
         return donorRepository.save(donor);
@@ -63,7 +80,6 @@ public class DonorService {
         donor.setBloodGroup(dto.getBloodGroup());
         donor.setAge(dto.getAge());
         donor.setPhone(dto.getPhone());
-        donor.setLastDonationDate(dto.getLastDonationDate());
         return donorRepository.save(donor);
     }
 

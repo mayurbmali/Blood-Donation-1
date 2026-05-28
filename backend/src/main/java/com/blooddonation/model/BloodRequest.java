@@ -19,6 +19,10 @@ public class BloodRequest {
     @Column(name = "requester_name", nullable = false)
     private String requesterName;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "requester_id", nullable = true)
+    private User requester;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "blood_group", nullable = false)
     private BloodGroup bloodGroup;

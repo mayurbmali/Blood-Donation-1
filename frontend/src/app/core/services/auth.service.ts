@@ -66,6 +66,14 @@ export class AuthService {
     return this.currentUserValue ? this.currentUserValue.role : null;
   }
 
+  getUserId(): number | null {
+    return this.currentUserValue ? this.currentUserValue.id : null;
+  }
+
+  getUserName(): string {
+    return this.currentUserValue ? this.currentUserValue.name : '';
+  }
+
   private handleError(error: HttpErrorResponse) {
     let errorMessage = 'An unknown error occurred!';
     if (error.error && typeof error.error === 'object') {

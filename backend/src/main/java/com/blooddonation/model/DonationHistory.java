@@ -25,4 +25,8 @@ public class DonationHistory {
 
     @Column(name = "donation_date", nullable = false)
     private LocalDate donationDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "blood_group_at_donation")
+    private BloodGroup bloodGroupAtDonation;
 }

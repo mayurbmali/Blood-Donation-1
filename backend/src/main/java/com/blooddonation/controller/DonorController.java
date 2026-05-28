@@ -15,7 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/donors")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class DonorController {
 
     private final DonorService donorService;
@@ -50,6 +50,14 @@ public class DonorController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Donor> create(@Valid @RequestBody DonorDto dto, @RequestParam Long userId) {
         return new ResponseEntity<>(donorService.create(dto, userId), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/me")
+    public ResponseEntity<Donor> createMyProfile(
+            @Valid @RequestBody DonorDto dto,
+            java.security.Principal principal
+    ) {
+        return new ResponseEntity<>(donorService.createSelf(dto, principal.getName()), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")

@@ -14,7 +14,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/donations")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
+// @CrossOrigin(origins = "http://localhost:4200")
+@CrossOrigin(origins = "*")
 public class DonationHistoryController {
 
     private final DonationHistoryService donationService;

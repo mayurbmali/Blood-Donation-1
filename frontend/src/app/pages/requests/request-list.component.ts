@@ -52,6 +52,13 @@ export class RequestListComponent implements OnInit {
         },
         error: (err) => this.snackBar.open(err || 'Failed to load requests', 'Close', { duration: 3000 })
       });
+    } else {
+      this.requestService.getMyRequests().subscribe({
+        next: (res) => {
+          this.requests = res.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        },
+        error: (err) => this.snackBar.open(err || 'Failed to load your requests', 'Close', { duration: 3000 })
+      });
     }
   }
 

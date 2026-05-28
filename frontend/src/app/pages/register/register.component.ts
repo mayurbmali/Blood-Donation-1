@@ -5,7 +5,6 @@ import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../core/services/auth.service';
@@ -20,7 +19,6 @@ import { AuthService } from '../../core/services/auth.service';
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatButtonModule,
     MatSnackBarModule
   ],
@@ -46,8 +44,7 @@ export class RegisterComponent implements OnInit {
     this.registerForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(4)]],
-      role: ['DONOR', Validators.required]
+      password: ['', [Validators.required, Validators.minLength(4)]]
     });
   }
 
@@ -60,8 +57,8 @@ export class RegisterComponent implements OnInit {
     this.authService.register(this.registerForm.value).subscribe({
       next: () => {
         this.loading = false;
-        this.snackBar.open('Registration successful!', 'Close', { duration: 3000 });
-        this.router.navigate(['/dashboard']);
+        this.snackBar.open('Registration successful! Please complete your donor profile.', 'Close', { duration: 4000 });
+        this.router.navigate(['/donors']);
       },
       error: (err) => {
         this.loading = false;

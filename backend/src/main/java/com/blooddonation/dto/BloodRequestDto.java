@@ -2,7 +2,6 @@ package com.blooddonation.dto;
 
 import com.blooddonation.model.BloodGroup;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
@@ -11,9 +10,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BloodRequestDto {
-
-    @NotBlank(message = "Requester name is required")
-    private String requesterName;
 
     @NotNull(message = "Blood group is required")
     private BloodGroup bloodGroup;

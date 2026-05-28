@@ -64,9 +64,20 @@ export class DashboardComponent implements OnInit {
         }
       });
     } else {
-      this.totalDonors = 1;
-      this.totalRequests = 0;
-      this.pendingRequests = 0;
+      this.requestService.getMyRequests().subscribe({
+        next: (reqs) => {
+          this.totalRequests = reqs.length;
+          this.pendingRequests = reqs.filter(r => r.status === 'PENDING').length;
+        },
+        error: () => {
+          this.totalRequests = 0;
+          this.pendingRequests = 0;
+        }
+      });
+      this.donorService.getMyProfile().subscribe({
+        next: () => this.totalDonors = 1,
+        error: () => this.totalDonors = 0
+      });
     }
 
     this.inventoryService.getAll().subscribe({

@@ -48,6 +48,12 @@ export class DonorService {
     );
   }
 
+  createMyProfile(dto: DonorDto): Observable<Donor> {
+    return this.http.post<Donor>(`${this.apiUrl}/me`, dto).pipe(
+      catchError(this.handleError)
+    );
+  }
+
   update(id: number, dto: DonorDto): Observable<Donor> {
     return this.http.put<Donor>(`${this.apiUrl}/${id}`, dto).pipe(
       catchError(this.handleError)

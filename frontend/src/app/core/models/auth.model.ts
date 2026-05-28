@@ -7,10 +7,10 @@ export interface RegisterRequest {
   name: string;
   email: string;
   password?: string;
-  role: 'ADMIN' | 'DONOR';
 }
 
 export interface AuthResponse {
+  id: number;
   token: string;
   name: string;
   role: 'ADMIN' | 'DONOR';

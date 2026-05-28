@@ -3,6 +3,7 @@ package com.blooddonation.service;
 import com.blooddonation.dto.AuthResponse;
 import com.blooddonation.dto.LoginRequest;
 import com.blooddonation.dto.RegisterRequest;
+import com.blooddonation.model.Role;
 import com.blooddonation.model.User;
 import com.blooddonation.repository.UserRepository;
 import com.blooddonation.security.JwtService;
@@ -30,13 +31,14 @@ public class AuthService {
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(Role.DONOR)
                 .build();
 
         User savedUser = userRepository.save(user);
         String jwtToken = jwtService.generateToken(savedUser);
 
         return AuthResponse.builder()
+                .id(savedUser.getId())
                 .token(jwtToken)
                 .name(savedUser.getName())
                 .role(savedUser.getRole())
@@ -57,6 +59,7 @@ public class AuthService {
         String jwtToken = jwtService.generateToken(user);
 
         return AuthResponse.builder()
+                .id(user.getId())
                 .token(jwtToken)
                 .name(user.getName())
                 .role(user.getRole())

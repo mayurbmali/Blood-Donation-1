@@ -1,6 +1,9 @@
+import { User } from './auth.model';
+
 export interface BloodRequest {
   id: number;
   requesterName: string;
+  requester?: User;
   bloodGroup: string;
   units: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -8,7 +11,6 @@ export interface BloodRequest {
 }
 
 export interface BloodRequestDto {
-  requesterName: string;
   bloodGroup: string;
   units: number;
 }

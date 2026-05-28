@@ -111,8 +111,11 @@
       <mat-card-content>
         <div class="warning-container flex-col align-center" style="gap: 16px;">
           <mat-icon style="font-size: 48px; width: 48px; height: 48px; color: var(--warning);">warning</mat-icon>
-          <h3 style="margin: 0; font-size: 18px; font-weight: 600;">Profile Not Found</h3>
-          <p class="text-muted" style="margin: 0; max-width: 400px; line-height: 1.5;">You do not have a donor profile associated with your account yet. Please contact the administrator to assign your profile details (Blood Group, Phone, Age).</p>
+          <h3 style="margin: 0; font-size: 18px; font-weight: 600;">No Profile Yet</h3>
+          <p class="text-muted" style="margin: 0; max-width: 400px; line-height: 1.5;">You don't have a donor profile yet. Create one now to register as a blood donor.</p>
+          <button mat-raised-button color="primary" (click)="openSelfCreateDialog()" style="background-color: var(--primary); color: white; margin-top: 8px;">
+            <mat-icon style="vertical-align: middle; margin-right: 4px;">add</mat-icon> Create My Profile
+          </button>
         </div>
       </mat-card-content>
     </mat-card>

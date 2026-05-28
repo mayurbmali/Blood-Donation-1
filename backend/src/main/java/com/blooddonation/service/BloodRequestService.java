@@ -4,6 +4,7 @@ import com.blooddonation.dto.BloodRequestDto;
 import com.blooddonation.exception.ResourceNotFoundException;
 import com.blooddonation.model.BloodRequest;
 import com.blooddonation.model.RequestStatus;
+import com.blooddonation.model.User;
 import com.blooddonation.repository.BloodRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,9 +18,10 @@ public class BloodRequestService {
     private final BloodRequestRepository requestRepository;
     private final BloodInventoryService inventoryService;
 
-    public BloodRequest create(BloodRequestDto dto) {
+    public BloodRequest create(BloodRequestDto dto, User requester) {
         BloodRequest request = BloodRequest.builder()
-                .requesterName(dto.getRequesterName())
+                .requesterName(requester.getName())
+                .requester(requester)
                 .bloodGroup(dto.getBloodGroup())
                 .units(dto.getUnits())
                 .status(RequestStatus.PENDING)
@@ -28,7 +30,11 @@ public class BloodRequestService {
     }
 
     public List<BloodRequest> getAll() {
-        return requestRepository.findAll();
+        return requestRepository.findByOrderByCreatedAtDesc();
+    }
+
+    public List<BloodRequest> getByRequester(User requester) {
+        return requestRepository.findByRequesterOrderByCreatedAtDesc(requester);
     }
 
     @Transactional
@@ -48,9 +54,15 @@ public class BloodRequestService {
         return requestRepository.save(request);
     }
 
+    @Transactional
     public void delete(Long id) {
         BloodRequest request = requestRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Blood request not found with id: " + id));
+
+        if (request.getStatus() == RequestStatus.APPROVED) {
+            inventoryService.increaseStock(request.getBloodGroup(), request.getUnits());
+        }
+
         requestRepository.delete(request);
     }
 }

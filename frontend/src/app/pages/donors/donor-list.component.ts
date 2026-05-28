@@ -62,9 +62,8 @@ export class DonorListComponent implements OnInit {
         next: (res) => {
           this.donorProfile = res;
         },
-        error: (err) => {
+        error: () => {
           this.donorProfile = null;
-          this.snackBar.open('No donor profile found. Please contact an admin to create your profile.', 'Close', { duration: 5000 });
         }
       });
     }
@@ -96,6 +95,25 @@ export class DonorListComponent implements OnInit {
             this.loadData();
           },
           error: (err) => this.snackBar.open(err || 'Failed to add donor', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+
+  openSelfCreateDialog(): void {
+    const dialogRef = this.dialog.open(DonorFormComponent, {
+      width: '450px',
+      data: { mode: 'self' }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.donorService.createMyProfile(result.donor).subscribe({
+          next: () => {
+            this.snackBar.open('Donor profile created!', 'Close', { duration: 3000 });
+            this.loadData();
+          },
+          error: (err) => this.snackBar.open(err || 'Failed to create profile', 'Close', { duration: 5000 })
         });
       }
     });

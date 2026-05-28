@@ -27,17 +27,8 @@
           <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Password must be at least 4 characters</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="w-full">
-          <mat-label>Role</mat-label>
-          <mat-select formControlName="role" required>
-            <mat-option value="DONOR">Donor</mat-option>
-            <mat-option value="ADMIN">Admin</mat-option>
-          </mat-select>
-          <mat-error *ngIf="registerForm.get('role')?.hasError('required')">Role is required</mat-error>
-        </mat-form-field>
-
         <button mat-raised-button color="primary" type="submit" class="submit-btn w-full" [disabled]="registerForm.invalid || loading">
-          {{ loading ? 'Creating Account...' : 'Register' }}
+          {{ loading ? 'Creating Account...' : 'Register as Donor' }}
         </button>
       </form>
     </mat-card-content>

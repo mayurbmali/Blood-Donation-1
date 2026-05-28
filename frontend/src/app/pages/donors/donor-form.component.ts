@@ -6,8 +6,6 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { Donor } from '../../core/models/donor.model';
 
 @Component({
@@ -20,9 +18,7 @@ import { Donor } from '../../core/models/donor.model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule,
-    MatDatepickerModule,
-    MatNativeDateModule
+    MatButtonModule
   ],
   templateUrl: './donor-form.component.html',
   styleUrls: ['./donor-form.component.scss']
@@ -44,19 +40,24 @@ export class DonorFormComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<DonorFormComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { mode: 'add' | 'edit'; donor?: Donor }
+    @Inject(MAT_DIALOG_DATA) public data: { mode: 'add' | 'edit' | 'self'; donor?: Donor }
   ) {}
+
+  get isSelfMode(): boolean { return this.data.mode === 'self'; }
 
   ngOnInit(): void {
     this.isEditMode = this.data.mode === 'edit';
     const donor = this.data.donor;
 
+    const userIdControl = (this.isEditMode || this.isSelfMode)
+      ? [{ value: donor ? donor.user.id : '', disabled: true }, []]
+      : [donor ? donor.user.id : '', [Validators.required]];
+
     this.donorForm = this.fb.group({
-      userId: [{ value: donor ? donor.user.id : '', disabled: this.isEditMode }, this.isEditMode ? [] : [Validators.required]],
+      userId: userIdControl,
       bloodGroup: [donor ? donor.bloodGroup : '', Validators.required],
-      age: [donor ? donor.age : '', [Validators.required, Validators.min(18)]],
-      phone: [donor ? donor.phone : '', Validators.required],
-      lastDonationDate: [donor && donor.lastDonationDate ? new Date(donor.lastDonationDate) : null]
+      age: [donor ? donor.age : '', [Validators.required, Validators.min(18), Validators.max(65)]],
+      phone: [donor ? donor.phone : '', Validators.required]
     });
   }
 
@@ -66,23 +67,13 @@ export class DonorFormComponent implements OnInit {
     }
 
     const formVal = this.donorForm.getRawValue();
-    
-    let formattedDate = null;
-    if (formVal.lastDonationDate) {
-      const date = new Date(formVal.lastDonationDate);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      formattedDate = `${year}-${month}-${day}`;
-    }
 
     const payload = {
       userId: formVal.userId,
       donor: {
         bloodGroup: formVal.bloodGroup,
         age: formVal.age,
-        phone: formVal.phone,
-        lastDonationDate: formattedDate
+        phone: formVal.phone
       }
     };
 

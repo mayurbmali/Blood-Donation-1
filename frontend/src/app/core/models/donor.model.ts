@@ -13,5 +13,4 @@ export interface DonorDto {
   bloodGroup: string;
   age: number;
   phone: string;
-  lastDonationDate?: string;
 }
