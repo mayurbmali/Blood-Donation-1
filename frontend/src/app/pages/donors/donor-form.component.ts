@@ -6,6 +6,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 import { Donor } from '../../core/models/donor.model';
 
 @Component({
@@ -18,7 +20,9 @@ import { Donor } from '../../core/models/donor.model';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatButtonModule
+    MatButtonModule,
+    MatIconModule,
+    MatDividerModule
   ],
   templateUrl: './donor-form.component.html',
   styleUrls: ['./donor-form.component.scss']
@@ -26,6 +30,8 @@ import { Donor } from '../../core/models/donor.model';
 export class DonorFormComponent implements OnInit {
   donorForm!: FormGroup;
   isEditMode = false;
+  hidePassword = true;
+
   bloodGroups = [
     { value: 'A_POS', label: 'A+' },
     { value: 'A_NEG', label: 'A-' },
@@ -44,40 +50,58 @@ export class DonorFormComponent implements OnInit {
   ) {}
 
   get isSelfMode(): boolean { return this.data.mode === 'self'; }
+  get isAdminAdd(): boolean { return this.data.mode === 'add'; }
 
   ngOnInit(): void {
     this.isEditMode = this.data.mode === 'edit';
     const donor = this.data.donor;
 
-    const userIdControl = (this.isEditMode || this.isSelfMode)
-      ? [{ value: donor ? donor.user.id : '', disabled: true }, []]
-      : [donor ? donor.user.id : '', [Validators.required]];
-
-    this.donorForm = this.fb.group({
-      userId: userIdControl,
-      bloodGroup: [donor ? donor.bloodGroup : '', Validators.required],
-      age: [donor ? donor.age : '', [Validators.required, Validators.min(18), Validators.max(65)]],
-      phone: [donor ? donor.phone : '', Validators.required]
-    });
+    if (this.isAdminAdd) {
+      this.donorForm = this.fb.group({
+        name:      ['', Validators.required],
+        email:     ['', [Validators.required, Validators.email]],
+        password:  ['', [Validators.required, Validators.minLength(6)]],
+        bloodGroup:['', Validators.required],
+        age:       ['', [Validators.required, Validators.min(18), Validators.max(65)]],
+        phone:     ['', Validators.required]
+      });
+    } else {
+      this.donorForm = this.fb.group({
+        bloodGroup:[donor ? donor.bloodGroup : '', Validators.required],
+        age:       [donor ? donor.age : '', [Validators.required, Validators.min(18), Validators.max(65)]],
+        phone:     [donor ? donor.phone : '', Validators.required]
+      });
+    }
   }
 
   onSubmit(): void {
-    if (this.donorForm.invalid) {
-      return;
-    }
+    if (this.donorForm.invalid) return;
 
     const formVal = this.donorForm.getRawValue();
 
-    const payload = {
-      userId: formVal.userId,
-      donor: {
-        bloodGroup: formVal.bloodGroup,
-        age: formVal.age,
-        phone: formVal.phone
-      }
-    };
-
-    this.dialogRef.close(payload);
+    if (this.isAdminAdd) {
+      this.dialogRef.close({
+        mode: 'adminCreate',
+        payload: {
+          name:       formVal.name,
+          email:      formVal.email,
+          password:   formVal.password,
+          bloodGroup: formVal.bloodGroup,
+          age:        Number(formVal.age),
+          phone:      formVal.phone
+        }
+      });
+    } else {
+      this.dialogRef.close({
+        mode: this.data.mode,
+        donor: {
+          bloodGroup: formVal.bloodGroup,
+          age:        Number(formVal.age),
+          phone:      formVal.phone
+        },
+        donorId: this.data.donor?.id
+      });
+    }
   }
 
   onCancel(): void {

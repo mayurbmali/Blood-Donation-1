@@ -1,5 +1,6 @@
 package com.blooddonation.controller;
 
+import com.blooddonation.dto.AdminCreateDonorRequest;
 import com.blooddonation.dto.DonorDto;
 import com.blooddonation.model.BloodGroup;
 import com.blooddonation.model.Donor;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
@@ -50,6 +52,12 @@ public class DonorController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Donor> create(@Valid @RequestBody DonorDto dto, @RequestParam Long userId) {
         return new ResponseEntity<>(donorService.create(dto, userId), HttpStatus.CREATED);
+    }
+
+    @PostMapping("/admin/create")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Donor> adminCreate(@Valid @RequestBody AdminCreateDonorRequest request) {
+        return new ResponseEntity<>(donorService.adminCreateDonor(request), HttpStatus.CREATED);
     }
 
     @PostMapping("/me")

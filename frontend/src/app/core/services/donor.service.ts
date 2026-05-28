@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Donor, DonorDto } from '../models/donor.model';
+import { Donor, DonorDto, AdminCreateDonorRequest } from '../models/donor.model';
 
 @Injectable({
   providedIn: 'root'
@@ -44,6 +44,12 @@ export class DonorService {
 
   create(dto: DonorDto, userId: number): Observable<Donor> {
     return this.http.post<Donor>(`${this.apiUrl}?userId=${userId}`, dto).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  adminCreateDonor(request: AdminCreateDonorRequest): Observable<Donor> {
+    return this.http.post<Donor>(`${this.apiUrl}/admin/create`, request).pipe(
       catchError(this.handleError)
     );
   }

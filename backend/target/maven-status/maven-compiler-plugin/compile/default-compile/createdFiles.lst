@@ -37,6 +37,7 @@ com/blooddonation/dto/DonorDto.class
 com/blooddonation/config/DatabaseSeeder.class
 com/blooddonation/dto/AuthResponse$AuthResponseBuilder.class
 com/blooddonation/model/RequestStatus.class
+com/blooddonation/dto/AdminCreateDonorRequest$AdminCreateDonorRequestBuilder.class
 com/blooddonation/model/Donor.class
 com/blooddonation/model/User.class
 com/blooddonation/service/DonorService.class
@@ -49,4 +50,5 @@ com/blooddonation/controller/AuthController.class
 com/blooddonation/model/BloodInventory.class
 com/blooddonation/controller/UserController.class
 com/blooddonation/dto/RegisterRequest$RegisterRequestBuilder.class
+com/blooddonation/dto/AdminCreateDonorRequest.class
 com/blooddonation/exception/ErrorResponse.class

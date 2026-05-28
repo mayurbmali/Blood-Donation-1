@@ -9,6 +9,7 @@
 /home/runner/workspace/backend/src/main/java/com/blooddonation/model/Donor.java
 /home/runner/workspace/backend/src/main/java/com/blooddonation/service/DonorService.java
 /home/runner/workspace/backend/src/main/java/com/blooddonation/dto/BloodRequestDto.java
+/home/runner/workspace/backend/src/main/java/com/blooddonation/dto/AdminCreateDonorRequest.java
 /home/runner/workspace/backend/src/main/java/com/blooddonation/model/User.java
 /home/runner/workspace/backend/src/main/java/com/blooddonation/repository/BloodRequestRepository.java
 /home/runner/workspace/backend/src/main/java/com/blooddonation/model/DonationHistory.java

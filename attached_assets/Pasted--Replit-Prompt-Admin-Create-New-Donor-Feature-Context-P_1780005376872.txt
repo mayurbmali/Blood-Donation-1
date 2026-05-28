@@ -1,0 +1,455 @@
+# Replit Prompt: Admin "Create New Donor" Feature
+
+## Context & Problem
+
+In the Blood Donation app, the Admin's **"Add New Donor"** dialog (`donor-form.component`) currently asks for a **User ID** (a numeric database ID). This is broken — an admin should not need to look up internal IDs. Instead, the Admin should be able to create a **brand-new Donor** from scratch by providing full user + profile details in one form, just like a self-registration flow.
+
+**Goal:** When Admin clicks "Add New Donor", show a unified form that collects all fields needed to create BOTH a User account AND a Donor profile in one shot — using a new email address.
+
+---
+
+## Exact Changes Required
+
+### 1. NEW Backend DTO — `AdminCreateDonorRequest.java`
+
+Create this file at:
+`backend/src/main/java/com/blooddonation/dto/AdminCreateDonorRequest.java`
+
+```java
+package com.blooddonation.dto;
+
+import com.blooddonation.model.BloodGroup;
+import jakarta.validation.constraints.*;
+import lombok.*;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AdminCreateDonorRequest {
+
+    @NotBlank(message = "Name is required")
+    private String name;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
+
+    @NotNull(message = "Blood group is required")
+    private BloodGroup bloodGroup;
+
+    @NotNull(message = "Age is required")
+    @Min(value = 18, message = "Age must be at least 18")
+    @Max(value = 65, message = "Age must be 65 or under")
+    private Integer age;
+
+    @NotBlank(message = "Phone number is required")
+    private String phone;
+}
+```
+
+---
+
+### 2. NEW Backend Method in `DonorService.java`
+
+Open `backend/src/main/java/com/blooddonation/service/DonorService.java`.
+
+Add these imports at the top (if not already present):
+```java
+import com.blooddonation.dto.AdminCreateDonorRequest;
+import com.blooddonation.model.Role;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
+```
+
+Inject `PasswordEncoder` — add it to the class fields (it is already registered as a bean in `ApplicationConfig`):
+```java
+private final PasswordEncoder passwordEncoder;
+```
+
+Add this new method to the `DonorService` class:
+```java
+@Transactional
+public Donor adminCreateDonor(AdminCreateDonorRequest request) {
+    if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+        throw new IllegalArgumentException("A user with this email already exists");
+    }
+
+    User user = User.builder()
+            .name(request.getName())
+            .email(request.getEmail())
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(Role.DONOR)
+            .build();
+
+    User savedUser = userRepository.save(user);
+
+    Donor donor = Donor.builder()
+            .user(savedUser)
+            .bloodGroup(request.getBloodGroup())
+            .age(request.getAge())
+            .phone(request.getPhone())
+            .build();
+
+    return donorRepository.save(donor);
+}
+```
+
+> **Important:** The `@Transactional` annotation ensures that if saving the Donor fails after saving the User, the whole operation rolls back — no orphan User records.
+
+---
+
+### 3. NEW Backend Endpoint in `DonorController.java`
+
+Open `backend/src/main/java/com/blooddonation/controller/DonorController.java`.
+
+Add this import:
+```java
+import com.blooddonation.dto.AdminCreateDonorRequest;
+```
+
+Add this new endpoint **alongside** (not replacing) the existing `@PostMapping`:
+```java
+@PostMapping("/admin/create")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<Donor> adminCreate(@Valid @RequestBody AdminCreateDonorRequest request) {
+    return new ResponseEntity<>(donorService.adminCreateDonor(request), HttpStatus.CREATED);
+}
+```
+
+> The existing `@PostMapping` (which takes `?userId=`) must **NOT be removed** — it is still used for the edit flow and other internal operations.
+
+---
+
+### 4. UPDATE Frontend Model — `donor.model.ts`
+
+Open `frontend/src/app/core/models/donor.model.ts`.
+
+Add this new interface for the admin create payload:
+```typescript
+export interface AdminCreateDonorRequest {
+  name: string;
+  email: string;
+  password: string;
+  bloodGroup: string;
+  age: number;
+  phone: string;
+}
+```
+
+---
+
+### 5. UPDATE Frontend Service — `donor.service.ts`
+
+Open `frontend/src/app/core/services/donor.service.ts`.
+
+Add this import at the top (update the existing models import line):
+```typescript
+import { Donor, DonorDto, AdminCreateDonorRequest } from '../models/donor.model';
+```
+
+Add this new method to the `DonorService` class:
+```typescript
+adminCreateDonor(request: AdminCreateDonorRequest): Observable<Donor> {
+  return this.http.post<Donor>(`${this.apiUrl}/admin/create`, request).pipe(
+    catchError(this.handleError)
+  );
+}
+```
+
+---
+
+### 6. REPLACE Frontend Form — `donor-form.component.ts`
+
+**Completely replace** the contents of `frontend/src/app/pages/donors/donor-form.component.ts` with:
+
+```typescript
+import { Component, Inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { Donor } from '../../core/models/donor.model';
+
+@Component({
+  selector: 'app-donor-form',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatButtonModule,
+    MatIconModule
+  ],
+  templateUrl: './donor-form.component.html',
+  styleUrls: ['./donor-form.component.scss']
+})
+export class DonorFormComponent implements OnInit {
+  donorForm!: FormGroup;
+  isEditMode = false;
+  hidePassword = true;
+
+  bloodGroups = [
+    { value: 'A_POS', label: 'A+' },
+    { value: 'A_NEG', label: 'A-' },
+    { value: 'B_POS', label: 'B+' },
+    { value: 'B_NEG', label: 'B-' },
+    { value: 'AB_POS', label: 'AB+' },
+    { value: 'AB_NEG', label: 'AB-' },
+    { value: 'O_POS', label: 'O+' },
+    { value: 'O_NEG', label: 'O-' }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<DonorFormComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: { mode: 'add' | 'edit' | 'self'; donor?: Donor }
+  ) {}
+
+  get isSelfMode(): boolean { return this.data.mode === 'self'; }
+  get isAdminAdd(): boolean { return this.data.mode === 'add'; }
+
+  ngOnInit(): void {
+    this.isEditMode = this.data.mode === 'edit';
+    const donor = this.data.donor;
+
+    if (this.isAdminAdd) {
+      // Admin creating brand-new donor: full user + profile fields
+      this.donorForm = this.fb.group({
+        name: ['', Validators.required],
+        email: ['', [Validators.required, Validators.email]],
+        password: ['', [Validators.required, Validators.minLength(6)]],
+        bloodGroup: ['', Validators.required],
+        age: ['', [Validators.required, Validators.min(18), Validators.max(65)]],
+        phone: ['', Validators.required]
+      });
+    } else {
+      // Edit mode or self-create: only donor profile fields
+      this.donorForm = this.fb.group({
+        bloodGroup: [donor ? donor.bloodGroup : '', Validators.required],
+        age: [donor ? donor.age : '', [Validators.required, Validators.min(18), Validators.max(65)]],
+        phone: [donor ? donor.phone : '', Validators.required]
+      });
+    }
+  }
+
+  onSubmit(): void {
+    if (this.donorForm.invalid) return;
+
+    const formVal = this.donorForm.getRawValue();
+
+    if (this.isAdminAdd) {
+      // Return the full admin-create payload
+      this.dialogRef.close({
+        mode: 'adminCreate',
+        payload: {
+          name: formVal.name,
+          email: formVal.email,
+          password: formVal.password,
+          bloodGroup: formVal.bloodGroup,
+          age: Number(formVal.age),
+          phone: formVal.phone
+        }
+      });
+    } else {
+      // Edit / self-create: return donor-only fields
+      this.dialogRef.close({
+        mode: this.data.mode,
+        donor: {
+          bloodGroup: formVal.bloodGroup,
+          age: Number(formVal.age),
+          phone: formVal.phone
+        },
+        donorId: donor?.id
+      });
+    }
+  }
+
+  onCancel(): void {
+    this.dialogRef.close();
+  }
+}
+```
+
+---
+
+### 7. REPLACE Frontend Template — `donor-form.component.html`
+
+**Completely replace** the contents of `frontend/src/app/pages/donors/donor-form.component.html` with:
+
+```html
+<h2 mat-dialog-title>
+  {{ isSelfMode ? 'Create My Donor Profile' : (isEditMode ? 'Edit Donor Profile' : 'Add New Donor') }}
+</h2>
+
+<form [formGroup]="donorForm" (ngSubmit)="onSubmit()">
+  <mat-dialog-content class="form-content flex-col" style="padding-top: 10px;">
+
+    <!-- ── ADMIN CREATE MODE: User Account Fields ── -->
+    <ng-container *ngIf="isAdminAdd">
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Full Name*</mat-label>
+        <input matInput type="text" formControlName="name" placeholder="Donor's full name">
+        <mat-error *ngIf="donorForm.get('name')?.hasError('required')">Name is required</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Email Address*</mat-label>
+        <input matInput type="email" formControlName="email" placeholder="donor@example.com">
+        <mat-error *ngIf="donorForm.get('email')?.hasError('required')">Email is required</mat-error>
+        <mat-error *ngIf="donorForm.get('email')?.hasError('email')">Enter a valid email address</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="w-full">
+        <mat-label>Password*</mat-label>
+        <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" placeholder="Min 6 characters">
+        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="donorForm.get('password')?.hasError('required')">Password is required</mat-error>
+        <mat-error *ngIf="donorForm.get('password')?.hasError('minlength')">Password must be at least 6 characters</mat-error>
+      </mat-form-field>
+
+      <mat-divider style="margin: 8px 0 16px 0;"></mat-divider>
+
+    </ng-container>
+
+    <!-- ── DONOR PROFILE FIELDS (all modes) ── -->
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Blood Group*</mat-label>
+      <mat-select formControlName="bloodGroup" required>
+        <mat-option *ngFor="let bg of bloodGroups" [value]="bg.value">{{ bg.label }}</mat-option>
+      </mat-select>
+      <mat-error *ngIf="donorForm.get('bloodGroup')?.hasError('required')">Blood Group is required</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Age*</mat-label>
+      <input matInput type="number" formControlName="age" placeholder="18 – 65" required>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('required')">Age is required</mat-error>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('min')">Age must be 18 or above</mat-error>
+      <mat-error *ngIf="donorForm.get('age')?.hasError('max')">Age must be 65 or under</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="w-full">
+      <mat-label>Phone*</mat-label>
+      <input matInput type="text" formControlName="phone" placeholder="Contact number" required>
+      <mat-error *ngIf="donorForm.get('phone')?.hasError('required')">Phone number is required</mat-error>
+    </mat-form-field>
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button type="button" (click)="onCancel()">Cancel</button>
+    <button mat-raised-button color="primary" type="submit"
+      [disabled]="donorForm.invalid"
+      style="background-color: var(--primary); color: white;">
+      {{ isSelfMode ? 'Create Profile' : (isEditMode ? 'Save Changes' : 'Create Donor') }}
+    </button>
+  </mat-dialog-actions>
+</form>
+```
+
+> **Note:** The template uses `mat-divider`. Make sure `MatDividerModule` is imported in `donor-form.component.ts` imports array:
+> ```typescript
+> import { MatDividerModule } from '@angular/material/divider';
+> // add MatDividerModule to the imports: [] array
+> ```
+
+---
+
+### 8. UPDATE `donor-list.component.ts` — Fix `openAddDialog()`
+
+Open `frontend/src/app/pages/donors/donor-list.component.ts`.
+
+**Update the import** for `DonorService` to also import the new type:
+```typescript
+import { AdminCreateDonorRequest } from '../../core/models/donor.model';
+```
+
+**Replace the existing `openAddDialog()` method** with this updated version:
+
+```typescript
+openAddDialog(): void {
+  const dialogRef = this.dialog.open(DonorFormComponent, {
+    width: '500px',
+    data: { mode: 'add' }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (!result) return;
+
+    if (result.mode === 'adminCreate') {
+      // New flow: admin creates user + donor in one call
+      this.donorService.adminCreateDonor(result.payload as AdminCreateDonorRequest).subscribe({
+        next: () => {
+          this.snackBar.open('Donor account created successfully!', 'Close', { duration: 3000 });
+          this.loadData();
+        },
+        error: (err) => this.snackBar.open(err || 'Failed to create donor', 'Close', { duration: 5000 })
+      });
+    }
+  });
+}
+```
+
+Also **replace the existing `openEditDialog()` method** to align with the new result shape:
+
+```typescript
+openEditDialog(donor: Donor): void {
+  const dialogRef = this.dialog.open(DonorFormComponent, {
+    width: '450px',
+    data: { mode: 'edit', donor }
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (!result) return;
+
+    this.donorService.update(donor.id, result.donor).subscribe({
+      next: () => {
+        this.snackBar.open('Donor updated successfully!', 'Close', { duration: 3000 });
+        this.loadData();
+      },
+      error: (err) => this.snackBar.open(err || 'Failed to update donor', 'Close', { duration: 5000 })
+    });
+  });
+}
+```
+
+---
+
+## Security Notes (no changes needed, just verify)
+
+- The new endpoint `POST /api/donors/admin/create` is annotated `@PreAuthorize("hasRole('ADMIN')")` — only admin JWT tokens can call it.
+- The `SecurityConfig` already has the correct JWT filter chain; no changes needed there.
+- Password is hashed via `PasswordEncoder` before storing — same as the regular register flow.
+
+---
+
+## Summary of All Files Changed
+
+| File | Change |
+|---|---|
+| `backend/.../dto/AdminCreateDonorRequest.java` | **NEW** — combined user+donor DTO |
+| `backend/.../service/DonorService.java` | **ADD** `adminCreateDonor()` method + inject `PasswordEncoder` |
+| `backend/.../controller/DonorController.java` | **ADD** `POST /api/donors/admin/create` endpoint |
+| `frontend/.../models/donor.model.ts` | **ADD** `AdminCreateDonorRequest` interface |
+| `frontend/.../services/donor.service.ts` | **ADD** `adminCreateDonor()` method |
+| `frontend/.../donors/donor-form.component.ts` | **REPLACE** — new conditional form logic |
+| `frontend/.../donors/donor-form.component.html` | **REPLACE** — new template with user+profile fields |
+| `frontend/.../donors/donor-list.component.ts` | **UPDATE** `openAddDialog()` and `openEditDialog()` |
+
+> After making all changes, rebuild the backend (`mvn clean package`) and rebuild/serve the frontend (`ng serve` or `ng build`). Test by logging in as Admin, going to Donors, clicking "Add New Donor", filling in all fields with a new email, and verifying the new donor appears in the list with their full name.

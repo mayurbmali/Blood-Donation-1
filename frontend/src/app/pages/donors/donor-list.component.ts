@@ -10,7 +10,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { DonorService } from '../../core/services/donor.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Donor } from '../../core/models/donor.model';
+import { Donor, AdminCreateDonorRequest } from '../../core/models/donor.model';
 import { DonorFormComponent } from './donor-form.component';
 import { ConfirmDialogComponent } from '../../shared/confirm-dialog.component';
 
@@ -83,18 +83,20 @@ export class DonorListComponent implements OnInit {
 
   openAddDialog(): void {
     const dialogRef = this.dialog.open(DonorFormComponent, {
-      width: '450px',
+      width: '500px',
       data: { mode: 'add' }
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.donorService.create(result.donor, result.userId).subscribe({
+      if (!result) return;
+
+      if (result.mode === 'adminCreate') {
+        this.donorService.adminCreateDonor(result.payload as AdminCreateDonorRequest).subscribe({
           next: () => {
-            this.snackBar.open('Donor added successfully!', 'Close', { duration: 3000 });
+            this.snackBar.open('Donor account created successfully!', 'Close', { duration: 3000 });
             this.loadData();
           },
-          error: (err) => this.snackBar.open(err || 'Failed to add donor', 'Close', { duration: 5000 })
+          error: (err) => this.snackBar.open(err || 'Failed to create donor', 'Close', { duration: 5000 })
         });
       }
     });
@@ -126,15 +128,15 @@ export class DonorListComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.donorService.update(donor.id, result.donor).subscribe({
-          next: () => {
-            this.snackBar.open('Donor updated successfully!', 'Close', { duration: 3000 });
-            this.loadData();
-          },
-          error: (err) => this.snackBar.open(err || 'Failed to update donor', 'Close', { duration: 5000 })
-        });
-      }
+      if (!result) return;
+
+      this.donorService.update(donor.id, result.donor).subscribe({
+        next: () => {
+          this.snackBar.open('Donor updated successfully!', 'Close', { duration: 3000 });
+          this.loadData();
+        },
+        error: (err) => this.snackBar.open(err || 'Failed to update donor', 'Close', { duration: 5000 })
+      });
     });
   }
 
