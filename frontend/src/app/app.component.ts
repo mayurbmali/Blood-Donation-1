@@ -14,6 +14,9 @@ import { filter, first } from 'rxjs/operators';
 export class AppComponent implements OnInit {
   title = 'blood-donation-system';
 
+  private readonly MIN_LOADER_MS = 3800;
+  private loaderStartTime = Date.now();
+
   constructor(public router: Router) {}
 
   ngOnInit(): void {
@@ -21,7 +24,9 @@ export class AppComponent implements OnInit {
       filter(e => e instanceof NavigationEnd),
       first()
     ).subscribe(() => {
-      setTimeout(() => this.dismissLoader(), 150);
+      const elapsed = Date.now() - this.loaderStartTime;
+      const remaining = Math.max(0, this.MIN_LOADER_MS - elapsed);
+      setTimeout(() => this.dismissLoader(), remaining);
     });
   }
 
@@ -30,7 +35,7 @@ export class AppComponent implements OnInit {
     if (!loader) return;
     loader.classList.add('ll-loader--out');
     document.body.classList.remove('ll-loading');
-    setTimeout(() => loader.remove(), 450);
+    setTimeout(() => loader.remove(), 480);
   }
 
   get showNavbar(): boolean {
