@@ -1,45 +1,58 @@
-<div class="container">
-  <div style="margin-bottom: 32px;">
-    <h1 class="page-title" style="margin: 0; font-size: 28px; font-weight: 700;">Blood Stock Inventory</h1>
-    <p class="text-muted" style="margin: 4px 0 0 0;">View or update the current unit levels across blood groups.</p>
+<div class="ll-container ll-anim-enter">
+
+  <div class="ll-page-header">
+    <div class="ll-page-header__text">
+      <h1>Blood Stock Inventory</h1>
+      <p>View {{ isAdmin() ? 'and update' : '' }} current unit levels across all blood groups.</p>
+    </div>
   </div>
 
   <div class="inventory-grid">
-    <mat-card class="inventory-card" *ngFor="let item of inventoryList">
-      <div class="card-header flex-row justify-between align-center" style="padding-bottom: 8px;">
-        <span class="blood-group-name">{{ item.bloodGroup.replace('_POS', '+').replace('_NEG', '-') }}</span>
-        
-        <!-- Admin Edit Action -->
-        <button mat-icon-button *ngIf="isAdmin() && editingGroupId !== item.id" (click)="startEdit(item)" color="primary" style="color: var(--primary);">
-          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">edit</mat-icon>
-        </button>
-      </div>
-      
-      <mat-card-content class="card-content flex-col align-center" style="padding: 16px 0 0 0;">
-        <!-- View Mode -->
-        <div class="view-mode flex-col align-center" *ngIf="editingGroupId !== item.id" style="gap: 8px;">
-          <span class="units-display">{{ item.unitsAvailable }}</span>
-          <span class="units-label">Units Available</span>
-          <app-status-chip [status]="getStockStatusLabel(item.unitsAvailable)"></app-status-chip>
-        </div>
+    <div class="inv-card" *ngFor="let item of inventoryList; let i = index"
+         [class.inv-card--critical]="item.unitsAvailable === 0"
+         [class.inv-card--low]="item.unitsAvailable > 0 && item.unitsAvailable < 5"
+         [style.animation-delay]="(i * 40) + 'ms'">
 
-        <!-- Edit Mode -->
-        <div class="edit-mode flex-col align-center" *ngIf="editingGroupId === item.id" style="gap: 12px;width: 100%;">
-          <mat-form-field appearance="outline" class="edit-field" style="width: 100%;">
-            <mat-label>Units</mat-label>
-            <input matInput type="number" [(ngModel)]="editUnitsValue" min="0" required>
-          </mat-form-field>
-          
-          <div class="edit-actions flex-row justify-between w-full" style="padding: 0 8px;">
-            <button mat-raised-button color="primary" (click)="saveEdit(item)" style="background-color: var(--success); color: white;">
-              Save
-            </button>
-            <button mat-button color="warn" (click)="cancelEdit()">
-              Cancel
-            </button>
+      <div class="inv-card__header">
+        <span class="inv-blood-group">{{ item.bloodGroup.replace('_POS', '+').replace('_NEG', '-') }}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <app-status-chip [status]="getStockStatusLabel(item.unitsAvailable)"></app-status-chip>
+          <button class="ll-btn-icon ll-btn-icon--primary"
+                  *ngIf="isAdmin() && editingGroupId !== item.id"
+                  (click)="startEdit(item)"
+                  title="Edit">
+            <mat-icon>edit</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- View Mode -->
+      <div class="inv-card__body" *ngIf="editingGroupId !== item.id">
+        <span class="inv-units">{{ item.unitsAvailable }}</span>
+        <span class="inv-units-label">units available</span>
+        <div class="inv-bar">
+          <div class="inv-bar__fill"
+               [style.width]="getBarWidth(item.unitsAvailable)"
+               [class.inv-bar__fill--ok]="item.unitsAvailable >= 5"
+               [class.inv-bar__fill--low]="item.unitsAvailable > 0 && item.unitsAvailable < 5"
+               [class.inv-bar__fill--critical]="item.unitsAvailable === 0">
           </div>
         </div>
-      </mat-card-content>
-    </mat-card>
+      </div>
+
+      <!-- Edit Mode -->
+      <div class="inv-card__edit" *ngIf="editingGroupId === item.id">
+        <mat-form-field appearance="outline" class="inv-edit-field">
+          <mat-label>Units</mat-label>
+          <input matInput type="number" [(ngModel)]="editUnitsValue" min="0" required>
+        </mat-form-field>
+        <div class="inv-edit-actions">
+          <button class="ll-btn-primary inv-save-btn" (click)="saveEdit(item)">Save</button>
+          <button class="ll-btn-ghost inv-cancel-btn" (click)="cancelEdit()">Cancel</button>
+        </div>
+      </div>
+
+    </div>
   </div>
+
 </div>

@@ -1,117 +1,150 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import "@angular/material/prebuilt-themes/indigo-pink.css";
+@import 'styles/tokens';
+@import 'styles/utilities';
 
-:root {
-  --primary: #B91C1C;
-  --primary-light: #FEE2E2;
-  --dark: #1E293B;
-  --gray: #64748B;
-  --light: #F8FAFC;
-  --success: #10B981;
-  --warning: #F59E0B;
-}
+// ─── Base ────────────────────────────────────────────────────────────────────
+* { box-sizing: border-box; }
 
-* {
-  box-sizing: border-box;
-}
+html { scroll-behavior: smooth; }
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif !important;
-  background-color: #F1F5F9;
-  color: var(--dark);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bgSoft);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.card {
-  background: white;
-  border-radius: 10px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  margin-bottom: 24px;
+// ─── Legacy compat vars (keep for landing page) ───────────────────────────────
+:root {
+  --primary: #E11D2E;
+  --primary-light: #FEE2E2;
+  --dark: #0F172A;
+  --gray: #64748B;
+  --light: #F8FAFC;
+  --success: #059669;
+  --warning: #D97706;
 }
 
-.stat-card {
-  background: white;
-  border-radius: 10px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+// ─── Angular Material overrides ──────────────────────────────────────────────
+.mat-mdc-card {
+  border-radius: var(--radiusMd) !important;
+  box-shadow: var(--shadowMd) !important;
+  border: 1px solid var(--border) !important;
+  background: var(--bg) !important;
 }
 
-.chip-pending {
-  background-color: #FFEFE2 !important;
-  color: #D97706 !important;
-  font-weight: 600;
+// Primary color overrides
+.mat-primary {
+  --mdc-filled-button-container-color: #E11D2E;
 }
 
-.chip-approved {
-  background-color: #E6FBF0 !important;
-  color: #059669 !important;
-  font-weight: 600;
-}
-
-.chip-rejected {
-  background-color: #FEE2E2 !important;
-  color: #DC2626 !important;
-  font-weight: 600;
-}
-
-mat-toolbar {
-  background-color: var(--primary) !important;
+.mat-mdc-raised-button.mat-primary {
+  background-color: var(--red) !important;
   color: white !important;
 }
 
-// Layout helper classes
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 24px 16px;
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--red) !important;
 }
 
-.flex-row {
-  display: flex;
-  flex-direction: row;
-  gap: 16px;
+.mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
+  color: var(--red) !important;
 }
 
-.flex-col {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.w-full {
+// Table
+.mat-mdc-table {
+  background: transparent !important;
+  box-shadow: none !important;
   width: 100%;
 }
 
-.grid-cols-4 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+.mat-mdc-header-row {
+  background: var(--bgSoft) !important;
 }
 
-.grid-cols-2 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 20px;
+.mat-mdc-header-cell {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--textMuted) !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
-.align-center {
-  align-items: center;
+.mat-mdc-cell {
+  font-size: 13.5px !important;
+  color: var(--text) !important;
+  padding: 14px 16px !important;
+  border-bottom: 1px solid var(--border) !important;
 }
 
-.justify-between {
-  justify-content: space-between;
+.mat-mdc-row {
+  transition: background 120ms ease;
+
+  &:hover .mat-mdc-cell {
+    background: var(--bgSoft) !important;
+  }
+
+  &:last-child .mat-mdc-cell {
+    border-bottom: none !important;
+  }
 }
 
-.text-primary {
-  color: var(--primary);
+.mdc-data-table__row:last-child .mdc-data-table__cell {
+  border-bottom: none !important;
 }
 
-.text-muted {
-  color: var(--gray);
+// Snackbar + Dialog
+.mat-mdc-snack-bar-container {
+  border-radius: var(--radiusSm) !important;
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: var(--radiusLg) !important;
+}
+
+// Toolbar (landing page compat)
+mat-toolbar {
+  background-color: var(--red) !important;
+  color: white !important;
+}
+
+// ─── Status chips (used by status-chip component via global classes) ──────────
+.chip-pending  { background: #FEF3C7 !important; color: #D97706 !important; }
+.chip-approved, .chip-ok { background: #D1FAE5 !important; color: #059669 !important; }
+.chip-rejected, .chip-critical { background: #FEE2E2 !important; color: #DC2626 !important; }
+.chip-low { background: #FEF3C7 !important; color: #D97706 !important; }
+
+// ─── Legacy layout helpers (used by landing page + older pages) ───────────────
+.container    { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+.flex-row     { display: flex; flex-direction: row; gap: 16px; }
+.flex-col     { display: flex; flex-direction: column; gap: 16px; }
+.w-full       { width: 100%; }
+.align-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.text-primary { color: var(--red); }
+.text-muted   { color: var(--textMuted); }
+.grid-cols-4  { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.grid-cols-2  { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.card {
+  background: var(--bg);
+  border-radius: var(--radiusMd);
+  padding: 24px;
+  box-shadow: var(--shadowMd);
+  border: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--bg);
+  border-radius: var(--radiusMd);
+  padding: 24px;
+  box-shadow: var(--shadowMd);
+  border: 1px solid var(--border);
 }

@@ -64,6 +64,12 @@ export class InventoryComponent implements OnInit {
     return 'OK';
   }
 
+  getBarWidth(units: number): string {
+    const max = 50;
+    const pct = Math.min(Math.round((units / max) * 100), 100);
+    return pct + '%';
+  }
+
   startEdit(item: BloodInventory): void {
     this.editingGroupId = item.id;
     this.editUnitsValue = item.unitsAvailable;
