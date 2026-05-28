@@ -22,7 +22,7 @@
   border: 1.5px solid var(--border);
   box-shadow: var(--shadowMd);
   padding: 20px;
-  transition: box-shadow var(--transSlow), transform var(--transSlow), border-color 200ms ease;
+  transition: box-shadow var(--transSlow), transform var(--transSlow), border-color 200ms ease, background-color 150ms ease;
   animation: ll-fade-up 0.35s var(--easeOut) both;
   cursor: default;
 
@@ -33,12 +33,12 @@
 
   &--critical {
     border-color: rgba(220, 38, 38, 0.3);
-    background: linear-gradient(135deg, #fff 60%, rgba(254, 226, 226, 0.4));
+    background: linear-gradient(135deg, var(--bg) 60%, var(--dangerLight));
   }
 
   &--low {
     border-color: rgba(217, 119, 6, 0.25);
-    background: linear-gradient(135deg, #fff 60%, rgba(254, 243, 199, 0.35));
+    background: linear-gradient(135deg, var(--bg) 60%, var(--warningLight));
   }
 }
 
@@ -55,6 +55,7 @@
   color: var(--red);
   letter-spacing: -0.5px;
   line-height: 1;
+  font-family: 'Sora', sans-serif;
 }
 
 .inv-card__body {
@@ -70,6 +71,7 @@
   color: var(--text);
   line-height: 1;
   letter-spacing: -1px;
+  font-family: 'Sora', sans-serif;
 }
 
 .inv-units-label {
@@ -95,7 +97,7 @@
 
   &--ok { background: var(--success); }
   &--low { background: var(--warning); }
-  &--critical { background: var(--danger); width: 100% !important; opacity: 0.3; }
+  &--critical { background: var(--danger); width: 100% !important; opacity: 0.5; }
 }
 
 // ── Edit mode ────────────────────────────────────────────────────────────────

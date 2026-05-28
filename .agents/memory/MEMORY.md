@@ -1,0 +1,3 @@
+- [Dark mode architecture](dark-mode-arch.md) — data-theme="dark" on html element; tokens in _tokens.scss; landing page uses :host-context([data-theme="dark"]) for local var overrides.
+- [Font system](font-system.md) — Sora for headings (h1-h6), Inter for body; imported via Google Fonts in styles.scss.
+- [Theme toggle](theme-toggle.md) — ThemeToggleComponent (standalone) + ThemeService (providedIn root); localStorage + system preference detection.

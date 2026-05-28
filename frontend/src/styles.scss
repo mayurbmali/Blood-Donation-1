@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 @import "@angular/material/prebuilt-themes/indigo-pink.css";
 @import 'styles/tokens';
@@ -7,7 +7,10 @@
 // ─── Base ────────────────────────────────────────────────────────────────────
 * { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  color-scheme: light dark;
+}
 
 body {
   margin: 0;
@@ -16,9 +19,14 @@ body {
   color: var(--text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
-// ─── Legacy compat vars (keep for landing page) ───────────────────────────────
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Sora', 'Inter', system-ui, sans-serif;
+}
+
+// ─── Legacy compat vars ───────────────────────────────────────────────────────
 :root {
   --primary: #E11D2E;
   --primary-light: #FEE2E2;
@@ -35,9 +43,10 @@ body {
   box-shadow: var(--shadowMd) !important;
   border: 1px solid var(--border) !important;
   background: var(--bg) !important;
+  color: var(--text) !important;
+  transition: background-color 150ms ease, border-color 150ms ease !important;
 }
 
-// Primary color overrides
 .mat-primary {
   --mdc-filled-button-container-color: #E11D2E;
 }
@@ -47,6 +56,7 @@ body {
   color: white !important;
 }
 
+// Form fields
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
 .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
@@ -55,6 +65,49 @@ body {
 
 .mat-mdc-form-field.mat-focused .mat-mdc-floating-label {
   color: var(--red) !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  background-color: var(--bg) !important;
+  transition: background-color 150ms ease !important;
+}
+
+.mdc-notched-outline__leading,
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: var(--borderMd) !important;
+  transition: border-color 150ms ease !important;
+}
+
+.mat-mdc-form-field-input-control,
+.mat-mdc-input-element {
+  color: var(--text) !important;
+}
+
+.mat-mdc-floating-label {
+  color: var(--textMuted) !important;
+}
+
+.mat-mdc-select-value-text,
+.mat-mdc-select-arrow {
+  color: var(--text) !important;
+}
+
+.mat-mdc-option {
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+
+  &:hover, &.mat-mdc-option-active {
+    background-color: var(--bgSubtle) !important;
+  }
+}
+
+.mat-mdc-autocomplete-panel,
+.mat-mdc-select-panel {
+  background-color: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radiusMd) !important;
+  box-shadow: var(--shadowLg) !important;
 }
 
 // Table
@@ -66,6 +119,7 @@ body {
 
 .mat-mdc-header-row {
   background: var(--bgSoft) !important;
+  transition: background-color 150ms ease !important;
 }
 
 .mat-mdc-header-cell {
@@ -76,6 +130,7 @@ body {
   color: var(--textMuted) !important;
   padding: 12px 16px !important;
   border-bottom: 1px solid var(--border) !important;
+  transition: border-color 150ms ease !important;
 }
 
 .mat-mdc-cell {
@@ -83,6 +138,7 @@ body {
   color: var(--text) !important;
   padding: 14px 16px !important;
   border-bottom: 1px solid var(--border) !important;
+  transition: background-color 120ms ease, border-color 150ms ease !important;
 }
 
 .mat-mdc-row {
@@ -108,6 +164,23 @@ body {
 
 .mat-mdc-dialog-container .mdc-dialog__surface {
   border-radius: var(--radiusLg) !important;
+  background-color: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+.mdc-dialog__title,
+.mat-mdc-dialog-title {
+  color: var(--text) !important;
+}
+
+.mdc-dialog__content,
+.mat-mdc-dialog-content {
+  color: var(--textMuted) !important;
+}
+
+// Icon button
+.mat-mdc-icon-button {
+  color: var(--textMuted) !important;
 }
 
 // Toolbar (landing page compat)
@@ -117,12 +190,12 @@ mat-toolbar {
 }
 
 // ─── Status chips (used by status-chip component via global classes) ──────────
-.chip-pending  { background: #FEF3C7 !important; color: #D97706 !important; }
-.chip-approved, .chip-ok { background: #D1FAE5 !important; color: #059669 !important; }
-.chip-rejected, .chip-critical { background: #FEE2E2 !important; color: #DC2626 !important; }
-.chip-low { background: #FEF3C7 !important; color: #D97706 !important; }
+.chip-pending  { background: var(--warningLight) !important; color: var(--warning) !important; }
+.chip-approved, .chip-ok { background: var(--successLight) !important; color: var(--success) !important; }
+.chip-rejected, .chip-critical { background: var(--dangerLight) !important; color: var(--danger) !important; }
+.chip-low { background: var(--warningLight) !important; color: var(--warning) !important; }
 
-// ─── Legacy layout helpers (used by landing page + older pages) ───────────────
+// ─── Legacy layout helpers ───────────────────────────────────────────────────
 .container    { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
 .flex-row     { display: flex; flex-direction: row; gap: 16px; }
 .flex-col     { display: flex; flex-direction: column; gap: 16px; }
@@ -140,6 +213,7 @@ mat-toolbar {
   box-shadow: var(--shadowMd);
   border: 1px solid var(--border);
   margin-bottom: 24px;
+  transition: background-color 150ms ease, border-color 150ms ease;
 }
 .stat-card {
   background: var(--bg);
@@ -147,4 +221,5 @@ mat-toolbar {
   padding: 24px;
   box-shadow: var(--shadowMd);
   border: 1px solid var(--border);
+  transition: background-color 150ms ease;
 }

@@ -5,6 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { RevealDirective } from '../../shared/directives/reveal.directive';
+import { ThemeToggleComponent } from '../../shared/theme-toggle.component';
 
 interface Stat { label: string; end: number; suffix: string; current: number; }
 interface Feature { icon: string; title: string; desc: string; }
@@ -16,7 +17,7 @@ interface Faq { q: string; a: string; open: boolean; }
 @Component({
   selector: 'app-landing-page',
   standalone: true,
-  imports: [CommonModule, RouterModule, RevealDirective],
+  imports: [CommonModule, RouterModule, RevealDirective, ThemeToggleComponent],
   templateUrl: './landing-page.component.html',
   styleUrls: ['./landing-page.component.scss']
 })
@@ -86,6 +87,22 @@ export class LandingPageComponent implements OnInit, AfterViewInit, OnDestroy {
     { q: 'How does emergency blood request matching work?', a: 'When an emergency request is raised, LifeLink instantly scans available inventory and eligible donors within range, then notifies both parties.', open: false },
     { q: 'Can hospitals integrate LifeLink with their existing systems?', a: 'Yes. LifeLink offers a REST API that hospitals and laboratories can integrate with their HIS/LIS systems for seamless data exchange.', open: false },
     { q: 'What blood groups does LifeLink support?', a: 'All 8 standard blood groups: A+, A−, B+, B−, AB+, AB−, O+, O−. Inventory, requests, and matching are all group-aware.', open: false },
+  ];
+
+  partners = [
+    { name: 'Red Cross', abbr: 'RC' },
+    { name: 'WHO', abbr: 'WHO' },
+    { name: 'AABB', abbr: 'AABB' },
+    { name: 'Blood Bank Intl.', abbr: 'BBI' },
+    { name: 'HealthNet', abbr: 'HN' },
+    { name: 'MediCare', abbr: 'MC' },
+  ];
+
+  trustItems = [
+    { icon: 'verified_user', title: 'Verified Profiles', desc: 'All donors verified by certified admins' },
+    { icon: 'lock', title: 'End-to-End Encrypted', desc: 'Your data is always protected' },
+    { icon: 'admin_panel_settings', title: 'Role-Based Access', desc: 'Granular control for every user type' },
+    { icon: 'receipt_long', title: 'Audit-Ready Reports', desc: 'Full traceability & compliance logs' },
   ];
 
   ngOnInit(): void {

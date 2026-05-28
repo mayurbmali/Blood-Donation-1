@@ -29,9 +29,13 @@
     </div>
 
     <div class="ll-nav__right">
+      <app-theme-toggle></app-theme-toggle>
       <div class="ll-nav__user">
         <div class="ll-nav__avatar">{{ getUserInitials() }}</div>
-        <span class="ll-nav__username">{{ getUserName() }}</span>
+        <div class="ll-nav__user-details">
+          <span class="ll-nav__username">{{ getUserName() }}</span>
+          <span class="ll-nav__role">{{ isAdmin() ? 'Administrator' : 'Donor' }}</span>
+        </div>
       </div>
       <button class="ll-nav__logout" (click)="logout()">
         <mat-icon>logout</mat-icon>
@@ -50,6 +54,9 @@
       <div>
         <div class="ll-nav__username">{{ getUserName() }}</div>
         <div class="ll-nav__role">{{ isAdmin() ? 'Administrator' : 'Donor' }}</div>
+      </div>
+      <div style="margin-left:auto">
+        <app-theme-toggle></app-theme-toggle>
       </div>
     </div>
     <a class="ll-nav__mobile-link" routerLink="/dashboard" routerLinkActive="ll-nav__mobile-link--active" (click)="closeMobile()">
