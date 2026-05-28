@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
+import { RouterOutlet, Router } from '@angular/router';
 import { NavbarComponent } from './shared/navbar.component';
 
 @Component({
@@ -12,4 +12,10 @@ import { NavbarComponent } from './shared/navbar.component';
 })
 export class AppComponent {
   title = 'blood-donation-system';
+
+  constructor(public router: Router) {}
+
+  get showNavbar(): boolean {
+    return this.router.url !== '/' && this.router.url !== '';
+  }
 }

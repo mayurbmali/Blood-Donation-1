@@ -1,0 +1,150 @@
+
+
+
+
+Build a **modern, sleek, responsive landing page** for a **Blood Donation Management System** (red + white theme) and integrate it into an existing **Angular 17+** project.
+
+### 1) Goal & Design Style
+
+* Theme: **Red + White**, clean, minimal, premium healthcare vibe
+* Layout: modern SaaS style landing page (like a startup product)
+* Typography: bold headline, clean spacing, soft shadows, subtle gradients
+* UI: rounded cards, pill buttons, clean icons, smooth hover states
+* Must look great on **desktop (16:9 hero)** and be fully responsive for tablet/mobile
+
+### 2) Tech Requirements
+
+* Angular standalone components preferred (or module-based if project already uses it)
+* Use **SCSS** (or CSS) with CSS variables for theme:
+
+  * `--red: #E11D2E;`
+  * `--redDark: #B3121F;`
+  * `--bg: #FFFFFF;`
+  * `--muted: #6B7280;`
+  * `--card: #F8FAFC;`
+* Use **pure CSS animations + IntersectionObserver scroll reveal**
+* Also add optional **GSAP** support if easy (but do not require it)
+* No heavy UI libraries needed; optional: `lucide-angular` icons (or inline SVG icons)
+
+### 3) Integration Into Existing Website
+
+Create these files/components:
+
+#### A) `landing-page.component.ts/html/scss`
+
+A full landing page containing these sections (in this exact order):
+
+1. **Sticky Navbar**
+
+   * Left: logo (drop icon + name “LifeLink”)
+   * Links: Home, About, Features, Donors, Hospitals, Reports, Contact
+   * Right CTA button: “Get Started”
+   * On scroll: navbar becomes slightly blurred with shadow
+
+2. **Hero Section (16:9 feel)**
+
+   * Headline: “Donate Blood. Save Lives.”
+   * Subtext: one short paragraph about connecting donors, hospitals, blood banks
+   * Primary CTA: “I Want to Donate”
+   * Secondary CTA: “Request Blood”
+   * Right side: large glossy blood drop illustration (use SVG or simple placeholder image)
+   * Add subtle animated orbit icons around the drop (Donors/Hospitals/Reports/Blood Banks/Notifications)
+
+3. **Stats Strip**
+
+   * 4 stats cards: Donors Registered, Units Donated, Lives Saved, Hospitals Connected
+   * Animated count-up on scroll into view
+
+4. **Features Grid**
+
+   * 5 feature cards with icon + title + 1-liner + “Learn more”
+   * Hover: lift, glow, icon bounce slightly
+
+5. **How It Works (4 steps)**
+
+   * Stepper line with icons: Register → Donate/Request → We Match → Save Lives
+   * Scroll reveal animation per step
+
+6. **Roles Section**
+
+   * Each shows key capabilities and a CTA button
+
+7. **Testimonials Carousel**
+
+   * 3–6 testimonials with avatars and rating stars
+   * Autoplay with pause on hover + dots navigation
+
+8. **FAQ Accordion**
+
+   * 6 questions (eligibility, privacy, emergency requests, donation interval, etc.)
+   * Smooth expand/collapse animation
+
+9. **Final CTA Banner**
+
+   * Large red gradient strip: “Ready to Save Lives?”
+   * CTA button: “Get Started Now”
+
+10. **Footer**
+
+* Links + newsletter input + social icons
+* Clean and minimal
+
+#### B) Scroll Reveal & Animations
+
+Implement:
+
+* A reusable `revealOnScroll` directive OR a small utility using IntersectionObserver:
+
+  * Elements fade in + translateY + slight blur → clear
+* Smooth hover transitions everywhere (cards, buttons, links)
+* Hero animations:
+
+  * Floating blood drop (slow up/down)
+  * Orbit icons rotation (slow)
+  * Background red waves (subtle moving gradient or animated SVG)
+
+#### C) Routing
+
+If the project already has routes, integrate without breaking existing pages.
+
+### 4) Content Copy (Use This)
+
+Brand name: **LifeLink**
+Tagline badge: “Every Drop Counts”
+Short hero paragraph:
+“LifeLink is a smart Blood Donation Management System that connects donors, hospitals, and organizations to save lives efficiently and effortlessly.”
+
+Features list (titles):
+
+* Donor Management
+* Blood Availability
+* Request Blood
+* Real-time Alerts
+* Reports & Analytics
+
+Testimonials sample names:
+
+* Dr. Arjun Mehta (City Hospital)
+* Priya Sharma (Regular Donor)
+* Rahul Verma (NGO Partner)
+
+### 5) Quality Bar
+
+* Must be **visually impressive** with modern motion
+* Clean spacing, consistent alignment, strong hierarchy
+* No placeholder lorem ipsum (use meaningful copy)
+* Performance friendly (no excessive animation jank)
+
+### 6) Deliverable
+
+Output the full Angular code for:
+
+* landing-page component (ts/html/scss)
+* any directive/service for animations (count-up + reveal)
+* routing update
+* minimal assets (SVG inline is fine)
+  Include instructions in comments on where to paste files in an existing Angular project.
+
+Now generate the full implementation.
+
+
