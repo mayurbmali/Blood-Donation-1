@@ -25,7 +25,7 @@
     <!-- Donation Date -->
     <mat-form-field appearance="outline" class="w-full">
       <mat-label>Donation Date</mat-label>
-      <input matInput [matDatepicker]="picker" formControlName="donationDate" required placeholder="Select date">
+      <input matInput [matDatepicker]="picker" formControlName="donationDate" required>
       <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
       <mat-datepicker #picker></mat-datepicker>
       <mat-error *ngIf="donationForm.get('donationDate')?.hasError('required')">Donation date is required</mat-error>
