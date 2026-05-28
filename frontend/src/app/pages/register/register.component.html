@@ -20,14 +20,14 @@
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Full Name</mat-label>
           <mat-icon matPrefix>person</mat-icon>
-          <input matInput type="text" formControlName="name" placeholder="Your full name" required>
+          <input matInput type="text" formControlName="name" required>
           <mat-error *ngIf="registerForm.get('name')?.hasError('required')">Name is required</mat-error>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Email Address</mat-label>
           <mat-icon matPrefix>email</mat-icon>
-          <input matInput type="email" formControlName="email" placeholder="you@example.com" required autocomplete="email">
+          <input matInput type="email" formControlName="email" required autocomplete="email">
           <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email is required</mat-error>
           <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Please enter a valid email</mat-error>
         </mat-form-field>
@@ -35,7 +35,7 @@
         <mat-form-field appearance="outline" class="w-full">
           <mat-label>Password</mat-label>
           <mat-icon matPrefix>lock</mat-icon>
-          <input matInput [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Create a password" required autocomplete="new-password">
+          <input matInput [type]="showPassword ? 'text' : 'password'" formControlName="password" required autocomplete="new-password">
           <button mat-icon-button matSuffix type="button" (click)="showPassword = !showPassword" class="toggle-pass">
             <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
