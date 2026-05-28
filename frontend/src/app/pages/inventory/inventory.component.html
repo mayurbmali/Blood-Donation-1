@@ -1,0 +1,45 @@
+<div class="container">
+  <div style="margin-bottom: 32px;">
+    <h1 class="page-title" style="margin: 0; font-size: 28px; font-weight: 700;">Blood Stock Inventory</h1>
+    <p class="text-muted" style="margin: 4px 0 0 0;">View or update the current unit levels across blood groups.</p>
+  </div>
+
+  <div class="inventory-grid">
+    <mat-card class="inventory-card" *ngFor="let item of inventoryList">
+      <div class="card-header flex-row justify-between align-center" style="padding-bottom: 8px;">
+        <span class="blood-group-name">{{ item.bloodGroup.replace('_POS', '+').replace('_NEG', '-') }}</span>
+        
+        <!-- Admin Edit Action -->
+        <button mat-icon-button *ngIf="isAdmin() && editingGroupId !== item.id" (click)="startEdit(item)" color="primary" style="color: var(--primary);">
+          <mat-icon style="font-size: 20px; width: 20px; height: 20px;">edit</mat-icon>
+        </button>
+      </div>
+      
+      <mat-card-content class="card-content flex-col align-center" style="padding: 16px 0 0 0;">
+        <!-- View Mode -->
+        <div class="view-mode flex-col align-center" *ngIf="editingGroupId !== item.id" style="gap: 8px;">
+          <span class="units-display">{{ item.unitsAvailable }}</span>
+          <span class="units-label">Units Available</span>
+          <app-status-chip [status]="getStockStatusLabel(item.unitsAvailable)"></app-status-chip>
+        </div>
+
+        <!-- Edit Mode -->
+        <div class="edit-mode flex-col align-center" *ngIf="editingGroupId === item.id" style="gap: 12px;width: 100%;">
+          <mat-form-field appearance="outline" class="edit-field" style="width: 100%;">
+            <mat-label>Units</mat-label>
+            <input matInput type="number" [(ngModel)]="editUnitsValue" min="0" required>
+          </mat-form-field>
+          
+          <div class="edit-actions flex-row justify-between w-full" style="padding: 0 8px;">
+            <button mat-raised-button color="primary" (click)="saveEdit(item)" style="background-color: var(--success); color: white;">
+              Save
+            </button>
+            <button mat-button color="warn" (click)="cancelEdit()">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

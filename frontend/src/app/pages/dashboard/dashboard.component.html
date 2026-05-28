@@ -1,0 +1,102 @@
+<div class="container">
+  <div class="dashboard-header flex-row justify-between align-center" style="margin-bottom: 24px;">
+    <div>
+      <h1 class="page-title" style="margin: 0; font-size: 28px; font-weight: 700;">Dashboard</h1>
+      <p class="text-muted" style="margin: 4px 0 0 0;">Welcome to your dashboard. Here is the current system overview.</p>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="grid-cols-4" *ngIf="isAdmin()" style="margin-bottom: 24px;">
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-card-subtitle class="text-muted">Total Donors</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content style="padding: 16px 0 0 0;">
+        <span class="stat-number text-primary" style="font-size: 36px; font-weight: 700;">{{ totalDonors }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-card-subtitle class="text-muted">Total Requests</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content style="padding: 16px 0 0 0;">
+        <span class="stat-number" style="font-size: 36px; font-weight: 700; color: var(--dark);">{{ totalRequests }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-card-subtitle class="text-muted">Pending Requests</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content style="padding: 16px 0 0 0;">
+        <span class="stat-number" style="font-size: 36px; font-weight: 700; color: var(--warning);">{{ pendingRequests }}</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-card-subtitle class="text-muted">Active Stock Types</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content style="padding: 16px 0 0 0;">
+        <span class="stat-number" style="font-size: 36px; font-weight: 700; color: var(--success);">{{ bloodTypesAvailable }}/8</span>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <div class="grid-cols-2" *ngIf="!isAdmin()" style="margin-bottom: 24px;">
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-card-subtitle class="text-muted">My Profile</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content style="padding: 16px 0 0 0;">
+        <span class="stat-number text-primary" style="font-size: 36px; font-weight: 700;">Active</span>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-header>
+        <mat-card-subtitle class="text-muted">Available Stock Types</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content style="padding: 16px 0 0 0;">
+        <span class="stat-number" style="font-size: 36px; font-weight: 700; color: var(--success);">{{ bloodTypesAvailable }}/8</span>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Inventory Table Section -->
+  <mat-card class="card table-card">
+    <div class="table-header flex-row justify-between align-center" style="margin-bottom: 20px;">
+      <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Blood Inventory Overview</h2>
+      <a mat-raised-button color="primary" *ngIf="isAdmin()" routerLink="/inventory" style="background-color: var(--primary); color: white;">
+        <mat-icon style="vertical-align: middle; margin-right: 4px; font-size: 18px; width: 18px; height: 18px;">edit</mat-icon> Manage Stock
+      </a>
+    </div>
+
+    <table mat-table [dataSource]="inventoryList" class="w-full">
+      <!-- Blood Group Column -->
+      <ng-container matColumnDef="bloodGroup">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Blood Group </th>
+        <td mat-cell *matCellDef="let element"> <strong>{{ element.bloodGroup.replace('_POS', '+').replace('_NEG', '-') }}</strong> </td>
+      </ng-container>
+
+      <!-- Units Available Column -->
+      <ng-container matColumnDef="unitsAvailable">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Units Available </th>
+        <td mat-cell *matCellDef="let element"> {{ element.unitsAvailable }} Units </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Status </th>
+        <td mat-cell *matCellDef="let element">
+          <app-status-chip [status]="getStockStatusLabel(element.unitsAvailable)"></app-status-chip>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </mat-card>
+</div>

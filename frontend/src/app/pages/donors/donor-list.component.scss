@@ -1,0 +1,39 @@
+.table-card {
+  padding: 24px;
+}
+
+table {
+  background: transparent;
+  box-shadow: none;
+}
+
+tr.mat-mdc-header-row {
+  height: 56px;
+}
+
+tr.mat-mdc-row {
+  height: 48px;
+  
+  &:hover {
+    background-color: #f8fafc;
+  }
+}
+
+.mat-mdc-cell, .mat-mdc-header-cell {
+  padding: 8px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.search-field {
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+}
+
+.profile-avatar {
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}

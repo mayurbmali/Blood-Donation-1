@@ -1,0 +1,88 @@
+<div class="container">
+  <div class="header-section flex-row justify-between align-center" style="margin-bottom: 24px;">
+    <div>
+      <h1 class="page-title" style="margin: 0; font-size: 28px; font-weight: 700;">Blood Requests</h1>
+      <p class="text-muted" style="margin: 4px 0 0 0;">View, submit, or manage blood requests.</p>
+    </div>
+    <button mat-raised-button color="primary" (click)="openAddDialog()" style="background-color: var(--primary); color: white;">
+      <mat-icon style="vertical-align: middle; margin-right: 4px; font-size: 18px; width: 18px; height: 18px;">add</mat-icon> Add Request
+    </button>
+  </div>
+
+  <!-- Admin view: requests list table -->
+  <mat-card class="card table-card" *ngIf="isAdmin()">
+    <table mat-table [dataSource]="requests" class="w-full">
+      
+      <!-- Requester Name Column -->
+      <ng-container matColumnDef="requesterName">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Requester Name </th>
+        <td mat-cell *matCellDef="let element"> {{ element.requesterName }} </td>
+      </ng-container>
+
+      <!-- Blood Group Column -->
+      <ng-container matColumnDef="bloodGroup">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Blood Group </th>
+        <td mat-cell *matCellDef="let element"> <strong>{{ element.bloodGroup.replace('_POS', '+').replace('_NEG', '-') }}</strong> </td>
+      </ng-container>
+
+      <!-- Units Column -->
+      <ng-container matColumnDef="units">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Units Needed </th>
+        <td mat-cell *matCellDef="let element"> {{ element.units }} Units </td>
+      </ng-container>
+
+      <!-- Status Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Status </th>
+        <td mat-cell *matCellDef="let element">
+          <app-status-chip [status]="element.status"></app-status-chip>
+        </td>
+      </ng-container>
+
+      <!-- Created At Column -->
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600;"> Date Requested </th>
+        <td mat-cell *matCellDef="let element"> {{ element.createdAt | date:'mediumDate' }} </td>
+      </ng-container>
+
+      <!-- Actions Column -->
+      <ng-container matColumnDef="actions">
+        <th mat-header-cell *matHeaderCellDef style="font-weight: 600; text-align: center;"> Actions </th>
+        <td mat-cell *matCellDef="let element" style="text-align: center;">
+          <div class="actions-container" *ngIf="element.status === 'PENDING'; else approvedActions">
+            <button mat-raised-button color="primary" class="approve-btn" (click)="updateStatus(element, 'APPROVED')" style="background-color: var(--success); color: white; margin-right: 8px;">
+              Approve
+            </button>
+            <button mat-raised-button color="warn" (click)="updateStatus(element, 'REJECTED')" style="background-color: var(--primary); color: white; margin-right: 8px;">
+              Reject
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteRequest(element)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+          <ng-template #approvedActions>
+            <button mat-icon-button color="warn" (click)="deleteRequest(element)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </ng-template>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+
+    <div *ngIf="requests.length === 0" class="no-records text-muted" style="text-align: center; padding: 24px;">
+      No requests found.
+    </div>
+  </mat-card>
+
+  <!-- Non-admin view: confirmation of submission -->
+  <mat-card class="card info-card" *ngIf="!isAdmin()" style="max-width: 600px; margin: 0 auto; text-align: center; padding: 40px 24px;">
+    <mat-card-content class="flex-col align-center" style="gap: 16px;">
+      <mat-icon style="font-size: 56px; width: 56px; height: 56px; color: var(--primary);">healing</mat-icon>
+      <h2 style="margin: 0; font-size: 20px; font-weight: 600;">Request Blood Units</h2>
+      <p class="text-muted" style="margin: 0; max-width: 420px; line-height: 1.5;">Click the "Add Request" button in the upper right to submit a new blood request. Once submitted, the system administrator will review and process your request based on available stock levels.</p>
+    </mat-card-content>
+  </mat-card>
+</div>
