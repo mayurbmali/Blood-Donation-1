@@ -1,0 +1,223 @@
+You are an expert Angular 17+ frontend engineer + UI/UX designer.
+
+I have an existing Angular project (Blood Donation Management System) with a premium modern landing page in a red-white theme (LifeLink style), but the rest of the pages/components look basic and inconsistent.
+
+TASK:
+Upgrade the entire frontend UI/UX so every page matches the landing page theme (modern, sleek, professional) with consistent styling, animations, transitions, hover effects, and scroll reveals — without breaking functionality.
+
+HARD REQUIREMENTS:
+- Keep existing routing, services, API calls, and business logic working.
+- DO NOT remove features; only improve UI/UX, layout, and consistency.
+- Must be responsive (desktop/tablet/mobile).
+- Use global theming via CSS variables/design tokens.
+- Add tasteful motion (not over-animated): scroll reveal + hover microinteractions + route transitions.
+- Prefer performant solutions: IntersectionObserver for scroll effects; avoid heavy libraries unless necessary.
+- Use Angular Material if already present BUT re-theme it to match the LifeLink red-white premium style.
+
+DELIVERABLES:
+1) A global theme system (tokens) applied across the app.
+2) A shared “App Shell” layout (navbar + page wrapper + background) reused by all internal pages.
+3) Reusable UI components (page header, cards, buttons, status pill, empty state, loader).
+4) Consistent modern redesign of major pages (lists + forms + dashboard) with effects and better UX.
+5) Route transition animation between pages.
+6) Scroll reveal animation applied to sections/cards across pages.
+7) Improved tables/forms: better spacing, typography, and interaction states.
+
+--------------------------------------------
+STEP 1 — AUDIT + BASELINE
+- First scan the project structure (src/app, routing, layout, shared, pages/components).
+- Identify the existing landing page and extract its style language (colors, typography, spacing, shadows, button styles).
+- Find current Material theme usage and global styles.
+
+--------------------------------------------
+STEP 2 — CREATE DESIGN SYSTEM (GLOBAL TOKENS)
+Create a theme file (styles/_tokens.scss) and apply it in styles.scss.
+Define CSS variables:
+- --red: #E11D2E
+- --redDark: #B3121F
+- --bg: #FFFFFF
+- --bgSoft: #F8FAFC
+- --text: #0F172A
+- --muted: #64748B
+- --border: rgba(15,23,42,0.10)
+- --shadowSm, --shadowMd, --shadowLg (soft modern shadows)
+- --radiusSm: 12px, --radiusMd: 16px, --radiusLg: 22px
+- spacing scale (8, 12, 16, 24, 32, 48, 64)
+- typography scale (H1/H2/H3/body)
+
+Add global base:
+- font-family: Inter (or similar; add to index.html via Google Fonts OR use system font fallback)
+- smooth scrolling
+- consistent background: subtle red gradient / wave pattern (very light)
+- normalize buttons/inputs
+
+Create utility classes in styles/_utilities.scss:
+- .ll-container (max-width, padding)
+- .ll-section (vertical spacing)
+- .ll-card (rounded, shadow, hover lift)
+- .ll-btn-primary / .ll-btn-ghost (pill, transitions)
+- .ll-badge / .ll-chip
+- .ll-input (clean input styling)
+- .ll-divider
+- .ll-glow-hover (subtle red glow on hover)
+
+--------------------------------------------
+STEP 3 — APP SHELL LAYOUT (CONSISTENT NAVBAR + WRAPPER)
+Create a shared layout component (AppShellComponent):
+- Sticky top navbar:
+  - Left: logo + “LifeLink”
+  - Center links (or compact on mobile)
+  - Right CTA button “Get Started”
+- Navbar scroll effect:
+  - on scroll add class: slight blur + shadow + background opacity
+- Wrap internal routes:
+  - background pattern
+  - consistent page padding & max width
+- Footer:
+  - quick links, newsletter input, socials
+- Ensure landing page can either:
+  A) use the same shell or
+  B) use its own layout but consistent tokens
+
+Implementation detail:
+- Use Angular RouterOutlet inside AppShell.
+- Apply AppShell to internal pages via routing structure (layout route).
+
+--------------------------------------------
+STEP 4 — MOTION SYSTEM
+A) Scroll Reveal (IntersectionObserver)
+Create a directive: RevealOnScrollDirective
+- Adds class when element enters viewport:
+  animation: fade in + translateY(16px) + blur(4px) -> clear
+- Add optional delay via input: [revealDelay]="100"
+- Apply to cards, sections, headers, grids.
+
+B) Route Transitions
+Add router animation (fade + slide) at shell level:
+- entering: opacity 0 -> 1, translateY 10px -> 0
+- leaving: opacity 1 -> 0, translateY 0 -> -8px
+Keep durations ~250–350ms with easing.
+
+C) Micro-interactions
+- Buttons: subtle lift + highlight on hover, active press effect
+- Cards: lift + shadow glow hover
+- Icons: slight rotate/scale on hover
+- Inputs: focus ring red glow
+
+--------------------------------------------
+STEP 5 — REUSABLE COMPONENT KIT (SHARED)
+Create /shared/ui components (standalone preferred):
+1) PageHeaderComponent:
+   - title, subtitle, action slot (buttons)
+2) StatCardComponent:
+   - icon + number + label
+   - optional count-up animation on reveal
+3) StatusPillComponent:
+   - statuses like Pending/Approved/Completed/Available/Low
+   - consistent colors and pill style
+4) EmptyStateComponent:
+   - illustration (simple SVG) + message + action button
+5) Loader/Skeleton:
+   - shimmer skeleton for tables/cards while loading
+6) ConfirmDialog and Toast style (if material snackbar/dialog used, re-style)
+
+--------------------------------------------
+STEP 6 — PAGE REDESIGN GUIDELINES (APPLY TO ALL PAGES)
+For every page:
+- Use PageHeader at top: Title + subtitle + primary action button
+- Use cards for content areas
+- Add a “Command Bar” above tables:
+  - search input
+  - filter chips / dropdown
+  - sort dropdown
+  - primary action button
+- Tables:
+  - inside ll-card
+  - sticky header
+  - row hover highlight
+  - action icons aligned right
+  - pagination styled
+- Forms:
+  - sectioned layout (2-column on desktop)
+  - stepper for long forms (optional)
+  - clear validation messages
+  - success state animation (checkmark)
+- Empty states and loading states for each list
+
+--------------------------------------------
+STEP 7 — APPLY TO KEY PAGES (ACTUAL IMPLEMENTATION)
+Identify major pages in project such as:
+- Dashboard
+- Donor list / donor register
+- Blood request list / create request
+- Inventory / blood stock
+- Login / Register
+- Admin pages (if present)
+
+Upgrade each:
+A) Dashboard:
+- KPI stat cards row with count-up
+- charts (optional) using a lightweight library OR simple SVG charts:
+  - Requests over time line chart
+  - Blood group availability bar chart
+- Recent activity list (timeline style)
+- Quick actions panel
+
+B) List pages (donors/requests/inventory):
+- command bar + modern table
+- status pills
+- filters
+- empty state
+- skeleton loading
+
+C) Forms:
+- modern inputs, sections, better layout
+- consistent primary/secondary buttons
+- subtle entrance animations
+
+D) Auth pages:
+- centered card layout
+- gradient background
+- show/hide password icon
+- form field focus glow
+- “Remember me” + forgot password link styling
+
+--------------------------------------------
+STEP 8 — ANGULAR MATERIAL THEME ALIGNMENT (IF MATERIAL USED)
+If Angular Material exists:
+- Create a custom Material theme aligned to LifeLink red
+- Increase border radius and soften elevation
+- Override:
+  - mat-card
+  - mat-form-field
+  - mat-table
+  - mat-dialog
+  - mat-snackbar
+Make Material look like part of the same product, not default.
+
+--------------------------------------------
+STEP 9 — POLISH
+- Ensure consistent spacing and typography across all pages
+- Ensure responsiveness:
+  - collapse nav to hamburger
+  - tables become stacked cards on small screens OR horizontal scroll with good styling
+- Add subtle background wave SVG to internal pages
+- Add hover underline animation for nav links
+- Make sure all animations respect prefers-reduced-motion
+
+--------------------------------------------
+OUTPUT REQUIREMENT:
+Make the actual code changes in the project:
+- Add/modify styles.scss and create styles/_tokens.scss and styles/_utilities.scss
+- Add shared components under src/app/shared/ui
+- Add AppShell layout and update routing to use it
+- Update pages HTML/SCSS to use new components and classes
+- Add reveal directive and router animations
+- Keep everything compiling and working
+
+After implementation, provide:
+- A short checklist of what was changed
+- Where to tweak theme colors/fonts
+- Any commands needed (npm install) ONLY if you introduced a new small dependency (prefer none)
+
+Now apply this upgrade to the existing project.
